@@ -189,7 +189,7 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
                 "AreaHA", "X1oPlants", "X1oHGM", "X2oVegID", "DomVegID", "HGM_ID", "HGMClass",
                 "Mod_Desc", "DomVeg_Lev1", "DomVeg_Lev2", "DomVeg_Lev3", "SurveyType")
 
-  spp_cols <- c("Species", "COMMON_NAME", "AUTHORITY", "ACRONYM", "COFC",
+  spp_cols <- c("ScientificName", "COMMON_NAME", "AUTHORITY", "ACRONYM", "COFC",
                 "FN", "WET", "FORM", "HABIT", "USDA_ID",
                 "OH_TORE", "TYPE", "OH_STATUS", "EMP", "MW", "NCNE", "NOTES")
 
@@ -206,6 +206,7 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
     dplyr::filter(!is.na(EventID))
 
   herb2 <- dplyr::left_join(herb1, tluSpp, by = c("Species" = "SCIENTIFIC_NAME"))
+  names(herb2)[names(herb2) == "Species"] <- "ScientificName"
 
   herb_final <- herb2[,c(loc_cols, spp_cols, "ModNo", "CovCode", "VoucherNo", "Comments_Herb", "EventID")]
 
@@ -217,7 +218,7 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   woody3 <- dplyr::left_join(woody2, tluWoody, by = "DiamID")
 
   # rename cols so consistent with herb view
-  names(woody3)[names(woody3) == "Scientific_Name"] <- "Species"
+  names(woody3)[names(woody3) == "Scientific_Name"] <- "ScientificName"
   names(woody3)[names(woody3) == "FeatureID_Loc"] <- "FeatureID"
   names(woody3)[names(woody3) == "Module_No"] <- "ModNo"
 
@@ -231,5 +232,6 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   assign("biomassVIBI", bmass_final, envir = env)
   assign("herbVIBI", herb_final, envir = env)
   assign("woodyVIBI", woody_final, envir = env)
+  assign("tluTaxa", tluSpp, envir = env)
   }
   }

@@ -80,7 +80,7 @@ getWoody <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   tryCatch(woody <- get("woodyVIBI", envir = env),
            error = function(e){stop("tbl_VIBI_Woody not found. Please run importData() first.")})
 
-  plots <- getPlots(survey_type = survey_type, hgm_class = hgm_class,
+  plots <- getPlots(plot_type = "VIBIplotID", survey_type = survey_type, hgm_class = hgm_class,
                     dom_veg1 = dom_veg1, plotID = plotID)
 
   plot_ids <- plots$LocationID
@@ -91,6 +91,8 @@ getWoody <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
 
   woody3 <- if(any(nativity == 'all')){woody2
   } else {woody2 |> dplyr::filter(OH_STATUS %in% nativity)}
+
+  names(woody3)[names(woody3)]
 
   return(woody3)
 }

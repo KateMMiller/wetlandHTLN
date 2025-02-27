@@ -71,7 +71,7 @@ getBiomass <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")
   tryCatch(biomass <- get("biomassVIBI", envir = env),
            error = function(e){stop("tbl_VIBI_Herb_Biomass not found. Please run importData() first.")})
 
-  plots <- getPlots(survey_type = survey_type, hgm_class = hgm_class,
+  plots <- getPlots(plot_type = "VIBIplotID", survey_type = survey_type, hgm_class = hgm_class,
                     dom_veg1 = dom_veg1, plotID = plotID)
 
   plot_ids <- plots$LocationID
