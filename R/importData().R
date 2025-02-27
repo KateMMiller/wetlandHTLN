@@ -61,7 +61,7 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   # matche arguments
   type <- match.arg(type, c("DSN", "dbfile", "csv", "zip"))
   stopifnot(class(new_env) == 'logical')
-  data_type <- match.arg(data_type = c("vibi")) #+++ Add oram and all when they're enabled ++++
+  data_type <- match.arg(data_type, c("vibi")) #+++ Add oram and all when they're enabled ++++
 
   # check that filepath was specified for non-DSN options
   if(type %in% c("dbfile", "csv", "zip")){
@@ -157,6 +157,13 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   }
 
   #---- Compile VIBI views ----
+  tluDom <- get("tlu_DomVeg", envir = env)
+  tluHGM <- get("tlu_HGMClass", envir = env)
+  tluWoody <- get("tlu_WoodyPlants", envir = env)
+
+  tluSpp <- get("tlu_WetlndSpeciesList", envir = env)
+  tluCover <- get("tlu_CoverClass", envir = env)
+
   loc1 <- get("Locations", envir = env)
   loc2 <- dplyr::left_join(loc1, tluHGM, by = "HGM_ID")
   loc <- dplyr::left_join(loc2, tluDom, by = c("DomVegID" = "DomVeg_ID"))
@@ -175,13 +182,6 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   woody <- get("VIBI_Woody", envir = env)
   woody$SampleDate = as.Date(sub("CUVAWetlnd", "", woody$EventID), format = "%Y%b%d")
   woody$SampleYear = as.numeric(format(woody$SampleDate, format = "%Y"))
-
-  tluDom <- get("tlu_DomVeg", envir = env)
-  tluHGM <- get("tlu_HGMClass", envir = env)
-  tluWoody <- get("tlu_WoodyPlants", envir = env)
-
-  tluSpp <- get("tlu_WetlndSpeciesList", envir = env)
-  tluCover <- get("tlu_CoverClass", envir = env)
 
   # Column names to order by/include for each view
   loc_cols <- c("LocationID", "FeatureID", "Park", "County", "SampleDate", "SampleYear", #"Latitude", "Longitude",

@@ -1,0 +1,92 @@
+#' @title getBiomass: get biomass data
+#'
+#' @importFrom dplyr filter
+#'
+#' @description This function filters biomass data data by plot, year, and plot types.
+#'
+#' @param years Numeric. Filter on years of survey. Default is all.
+#'
+#' @param survey_type Filter on survey type of plots. Options are "all" (default), "reference",
+#' "survey", "survey, womc", "womc", and "womc, reference". Can choose multiple options.
+#'
+#' @param hgm_class Filter on HGM class. Options are "all" (default), "Depression",
+#' "Impoundment", "Riverine", "Slope". Can choose multiple options.
+#'
+#' @param dom_veg1 Filter on level 1 dominant vegetation type. Options are "all" (default), "Emergent",
+#' "Forest", "Shrub". Can choose multiple options.
+#'
+#' @param plot Quoted string. Default is 'all'. If specified will return data for only plots specified.
+#' Can choose multiple plots. Based on FeatureID in database.
+#'
+#' @examples
+#' \dontrun{
+#' # run first
+#' importData()
+#'
+#' # return all biomass plant data
+#' biomass <- getBiomass()
+#'
+#' # return only 2023 data
+#' biomass23 <- getBiomass(years = 2023)
+#'
+#' # return 2020 and later
+#' biomass20 <- getBiomass(years = 2020:2024)
+#'
+#' # return only reference sites
+#' ref <- getBiomass(survey_type = c("reference", "womc, reference"))
+#'
+#' # return only wetlands of management concern
+#' womc <- getBiomass(survey_type = c("womc", "womc, reference", "survey, womc"))
+#'
+#' # return only depressional wetlands
+#' depr <- getBiomass(hgm_class = "Depression")
+#'
+#' return only forested vegetation types
+#' forest <- getbiomass(dom_veg1 = "Forest")
+#'
+#' # return non-forested vegetation types
+#' nonfor <- getBiomass(dom_veg1 = c("Shrub", "Emergent"))
+#'
+#' # return biomass species for subset of plots
+#' herb_plots <- getBiomass(plot = c("1007", "1017", "1034", "1036", "1043"))
+#'
+#' }
+#'
+#' @return Returns a data frame of biomass count data
+#' @export
+
+getBiomass <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
+                     survey_type = 'all', hgm_class = 'all', dom_veg1 = 'all',
+                     plot = 'all'){
+
+  #---- Bug handling ----
+  survey_type <- match.arg(survey_type, several.ok = T,
+                           choices = c("all", "reference", "survey", "survey, womc", "womc", "womc, reference"))
+  hgm_class <- match.arg(hgm_class, choices = c("all", "Depression", "Impoundment", "Riverine", "Slope"),
+                         several.ok = T)
+  dom_veg1 <- match.arg(dom_veg1, choices = c("all", "Emergent", "Forest", "Shrub"), several.ok = T)
+  stopifnot(class(years) == "numeric" | class(years) == "integer", years >= 2008)
+
+  #---- Compile data ----
+  env <- if(exists("HTLNwetlands")){HTLNwetlands} else {.GlobalEnv}
+
+  tryCatch(biomass <- get("biomassVIBI", envir = env),
+           error = function(e){stop("tbl_VIBI_Herb_Biomass not found. Please run importData() first.")})
+
+  biomass1 <- biomass |> filter(SampleYear %in% years)
+
+  biomass2 <- if(any(survey_type == 'all')){biomass1
+  } else {biomass1 |> dplyr::filter(SurveyType %in% survey_type)}
+
+  biomass3 <- if(any(hgm_class == 'all')){biomass2
+  } else {biomass2 |> dplyr::filter(HGMClass %in% hgm_class)}
+
+  biomass4 <- if(any(dom_veg1 == 'all')){biomass3
+  } else {biomass3 |> dplyr::filter(DomVeg_Lev1 %in% dom_veg1)}
+
+  biomass5 <- if(any(plot == 'all')){biomass4
+  } else {biomass4 |> dplyr::filter(FeatureID %in% plot)}
+
+  return(biomass5)
+}
+
