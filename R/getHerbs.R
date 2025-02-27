@@ -15,7 +15,7 @@
 #' @param dom_veg1 Filter on level 1 dominant vegetation type. Options are "all" (default), "Emergent",
 #' "Forest", "Shrub". Can choose multiple options.
 #'
-#' @param plot Quoted string. Default is 'all'. If specified will return data for only plots specified.
+#' @param plotID Quoted string. Default is 'all'. If specified will return data for only plots specified.
 #' Can choose multiple plots. Based on FeatureID in database.
 #'
 #' @param nativity Quoted string. Filter on native status. Options are "all" (default), "adventive",
@@ -44,7 +44,7 @@
 #' # return only depressional wetlands
 #' depr <- getHerbs(hgm_class = "Depression")
 #'
-#' return only forested vegetation types
+#' # return only forested vegetation types
 #' forest <- getHerbs(dom_veg1 = "Forest")
 #'
 #' # return non-forested vegetation types
@@ -54,7 +54,7 @@
 #' nat <- getHerbs(nativity = "native")
 #'
 #' # return herbs for subset of plots
-#' herb_plots <- getHerbs(plot = c("1007", "1017", "1034", "1036", "1043"))
+#' herb_plots <- getHerbs(plotID = c("1007", "1017", "1034", "1036", "1043"))
 #'
 #' }
 #'
@@ -65,7 +65,7 @@
 
 getHerbs <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                      survey_type = 'all', hgm_class = 'all', dom_veg1 = 'all',
-                     plot = 'all', nativity = 'all'){
+                     plotID = 'all', nativity = 'all'){
 
   #---- Bug handling ----
   survey_type <- match.arg(survey_type, several.ok = T,
@@ -82,23 +82,18 @@ getHerbs <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   tryCatch(herbs <- get("herbVIBI", envir = env),
            error = function(e){stop("tbl_VIBI_Herb not found. Please run importData() first.")})
 
-  herbs1 <- herbs |> filter(SampleYear %in% years)
+  plots <- getPlots(survey_type = survey_type, hgm_class = hgm_class,
+                    dom_veg1 = dom_veg1, plotID = plotID)
 
-  herbs2 <- if(any(survey_type == 'all')){herbs1
-    } else {herbs1 |> dplyr::filter(SurveyType %in% survey_type)}
+  plot_ids <- plots$LocationID
 
-  herbs3 <- if(any(hgm_class == 'all')){herbs2
-    } else {herbs2 |> dplyr::filter(HGMClass %in% hgm_class)}
+  herbs1 <- herbs[herbs$LocationID %in% plot_ids,]
 
-  herbs4 <- if(any(dom_veg1 == 'all')){herbs3
-    } else {herbs3 |> dplyr::filter(DomVeg_Lev1 %in% dom_veg1)}
+  herbs2 <- herbs1 |> filter(SampleYear %in% years)
 
-  herbs5 <- if(any(plot == 'all')){herbs4
-    } else {herbs4 |> dplyr::filter(FeatureID %in% plot)}
+  herbs3 <- if(any(nativity == 'all')){herbs2
+  } else {herbs2 |> dplyr::filter(OH_STATUS %in% nativity)}
 
-  herbs6 <- if(any(nativity == 'all')){herbs5
-    } else {herbs5 |> dplyr::filter(OH_STATUS %in% nativity)}
-
-  return(herbs6)
+  return(herbs3)
 }
 

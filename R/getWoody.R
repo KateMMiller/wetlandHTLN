@@ -15,7 +15,7 @@
 #' @param dom_veg1 Filter on level 1 dominant vegetation type. Options are "all" (default), "Emergent",
 #' "Forest", "Shrub". Can choose multiple options.
 #'
-#' @param plot Quoted string. Default is 'all'. If specified will return data for only plots specified.
+#' @param plotID Quoted string. Default is 'all'. If specified will return data for only plots specified.
 #' Can choose multiple plots. Based on FeatureID in database.
 #'
 #' @param nativity Quoted string. Filter on native status. Options are "all" (default), "adventive",
@@ -44,7 +44,7 @@
 #' # return only depressional wetlands
 #' depr <- getWoody(hgm_class = "Depression")
 #'
-#' return only forested vegetation types
+#' # return only forested vegetation types
 #' forest <- getWoody(dom_veg1 = "Forest")
 #'
 #' # return non-forested vegetation types
@@ -54,7 +54,7 @@
 #' nat <- getWoody(nativity = "native")
 #'
 #' # return woody species for subset of plots
-#' herb_plots <- getWoody(plot = c("1007", "1017", "1034", "1036", "1043"))
+#' woody_plots <- getWoody(plotID = c("1007", "1017", "1034", "1036", "1043"))
 #'
 #' }
 #'
@@ -63,7 +63,7 @@
 
 getWoody <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                      survey_type = 'all', hgm_class = 'all', dom_veg1 = 'all',
-                     plot = 'all', nativity = 'all'){
+                     plotID = 'all', nativity = 'all'){
 
   #---- Bug handling ----
   survey_type <- match.arg(survey_type, several.ok = T,
@@ -80,23 +80,18 @@ getWoody <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   tryCatch(woody <- get("woodyVIBI", envir = env),
            error = function(e){stop("tbl_VIBI_Woody not found. Please run importData() first.")})
 
-  woody1 <- woody |> filter(SampleYear %in% years)
+  plots <- getPlots(survey_type = survey_type, hgm_class = hgm_class,
+                    dom_veg1 = dom_veg1, plotID = plotID)
 
-  woody2 <- if(any(survey_type == 'all')){woody1
-  } else {woody1 |> dplyr::filter(SurveyType %in% survey_type)}
+  plot_ids <- plots$LocationID
 
-  woody3 <- if(any(hgm_class == 'all')){woody2
-  } else {woody2 |> dplyr::filter(HGMClass %in% hgm_class)}
+  woody1 <- woody[woody$LocationID %in% plot_ids,]
 
-  woody4 <- if(any(dom_veg1 == 'all')){woody3
-  } else {woody3 |> dplyr::filter(DomVeg_Lev1 %in% dom_veg1)}
+  woody2 <- woody1 |> filter(SampleYear %in% years)
 
-  woody5 <- if(any(plot == 'all')){woody4
-  } else {woody4 |> dplyr::filter(FeatureID %in% plot)}
+  woody3 <- if(any(nativity == 'all')){woody2
+  } else {woody2 |> dplyr::filter(OH_STATUS %in% nativity)}
 
-  woody6 <- if(any(nativity == 'all')){woody5
-  } else {woody5 |> dplyr::filter(OH_STATUS %in% nativity)}
-
-  return(woody6)
+  return(woody3)
 }
 

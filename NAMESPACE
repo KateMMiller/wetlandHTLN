@@ -2,7 +2,9 @@
 
 export(getBiomass)
 export(getHerbs)
+export(getPlots)
 export(getWoody)
 export(importData)
+export(sumVIBI)
 importFrom(dplyr,filter)
 importFrom(dplyr,left_join)

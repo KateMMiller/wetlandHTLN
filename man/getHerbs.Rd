@@ -9,7 +9,7 @@ getHerbs(
   survey_type = "all",
   hgm_class = "all",
   dom_veg1 = "all",
-  plot = "all",
+  plotID = "all",
   nativity = "all"
 )
 }
@@ -25,7 +25,7 @@ getHerbs(
 \item{dom_veg1}{Filter on level 1 dominant vegetation type. Options are "all" (default), "Emergent",
 "Forest", "Shrub". Can choose multiple options.}
 
-\item{plot}{Quoted string. Default is 'all'. If specified will return data for only plots specified.
+\item{plotID}{Quoted string. Default is 'all'. If specified will return data for only plots specified.
 Can choose multiple plots. Based on FeatureID in database.}
 
 \item{nativity}{Quoted string. Filter on native status. Options are "all" (default), "adventive",
@@ -60,7 +60,7 @@ womc <- getHerbs(survey_type = c("womc", "womc, reference", "survey, womc"))
 # return only depressional wetlands
 depr <- getHerbs(hgm_class = "Depression")
 
-return only forested vegetation types
+# return only forested vegetation types
 forest <- getHerbs(dom_veg1 = "Forest")
 
 # return non-forested vegetation types
@@ -70,7 +70,7 @@ nonfor <- getHerbs(dom_veg1 = c("Shrub", "Emergent"))
 nat <- getHerbs(nativity = "native")
 
 # return herbs for subset of plots
-herb_plots <- getHerbs(plot = c("1007", "1017", "1034", "1036", "1043"))
+herb_plots <- getHerbs(plotID = c("1007", "1017", "1034", "1036", "1043"))
 
 }
 

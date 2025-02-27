@@ -1,7 +1,5 @@
 #' @title getBiomass: get biomass data
 #'
-#' @importFrom dplyr filter
-#'
 #' @description This function filters biomass data data by plot, year, and plot types.
 #'
 #' @param years Numeric. Filter on years of survey. Default is all.
@@ -15,7 +13,7 @@
 #' @param dom_veg1 Filter on level 1 dominant vegetation type. Options are "all" (default), "Emergent",
 #' "Forest", "Shrub". Can choose multiple options.
 #'
-#' @param plot Quoted string. Default is 'all'. If specified will return data for only plots specified.
+#' @param plotID Quoted string. Default is 'all'. If specified will return data for only plots specified.
 #' Can choose multiple plots. Based on FeatureID in database.
 #'
 #' @examples
@@ -29,8 +27,8 @@
 #' # return only 2023 data
 #' biomass23 <- getBiomass(years = 2023)
 #'
-#' # return 2020 and later
-#' biomass20 <- getBiomass(years = 2020:2024)
+#' # return 2010 and later
+#' biomass10 <- getBiomass(years = 2010:2024)
 #'
 #' # return only reference sites
 #' ref <- getBiomass(survey_type = c("reference", "womc, reference"))
@@ -42,13 +40,13 @@
 #' depr <- getBiomass(hgm_class = "Depression")
 #'
 #' return only forested vegetation types
-#' forest <- getbiomass(dom_veg1 = "Forest")
+#' forest <- getBiomass(dom_veg1 = "Forest")
 #'
 #' # return non-forested vegetation types
 #' nonfor <- getBiomass(dom_veg1 = c("Shrub", "Emergent"))
 #'
-#' # return biomass species for subset of plots
-#' herb_plots <- getBiomass(plot = c("1007", "1017", "1034", "1036", "1043"))
+#' # return biomass for subset of plots
+#' biomass_plots <- getBiomass(plotID = c("1007", "1017", "1043"))
 #'
 #' }
 #'
@@ -56,8 +54,8 @@
 #' @export
 
 getBiomass <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
-                     survey_type = 'all', hgm_class = 'all', dom_veg1 = 'all',
-                     plot = 'all'){
+                       survey_type = 'all', hgm_class = 'all', dom_veg1 = 'all',
+                       plotID = 'all'){
 
   #---- Bug handling ----
   survey_type <- match.arg(survey_type, several.ok = T,
@@ -73,20 +71,14 @@ getBiomass <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")
   tryCatch(biomass <- get("biomassVIBI", envir = env),
            error = function(e){stop("tbl_VIBI_Herb_Biomass not found. Please run importData() first.")})
 
-  biomass1 <- biomass |> filter(SampleYear %in% years)
+  plots <- getPlots(survey_type = survey_type, hgm_class = hgm_class,
+                    dom_veg1 = dom_veg1, plotID = plotID)
 
-  biomass2 <- if(any(survey_type == 'all')){biomass1
-  } else {biomass1 |> dplyr::filter(SurveyType %in% survey_type)}
+  plot_ids <- plots$LocationID
 
-  biomass3 <- if(any(hgm_class == 'all')){biomass2
-  } else {biomass2 |> dplyr::filter(HGMClass %in% hgm_class)}
+  biomass1 <- biomass[biomass$LocationID %in% plot_ids, ]
 
-  biomass4 <- if(any(dom_veg1 == 'all')){biomass3
-  } else {biomass3 |> dplyr::filter(DomVeg_Lev1 %in% dom_veg1)}
+  biomass2 <- biomass1[biomass1$SampleYear %in% years, ]
 
-  biomass5 <- if(any(plot == 'all')){biomass4
-  } else {biomass4 |> dplyr::filter(FeatureID %in% plot)}
-
-  return(biomass5)
+  return(biomass2)
 }
-

@@ -227,6 +227,7 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   names(HTLNwetlands)
   rm(list = ls(envir = env), envir = env)
 
+  assign("locations", loc, envir = env)
   assign("biomassVIBI", bmass_final, envir = env)
   assign("herbVIBI", herb_final, envir = env)
   assign("woodyVIBI", woody_final, envir = env)
