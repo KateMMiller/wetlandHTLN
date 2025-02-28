@@ -162,6 +162,8 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   tluWoody <- get("tlu_WoodyPlants", envir = env)
 
   tluSpp <- get("tlu_WetlndSpeciesList", envir = env)
+  names(tluSpp)[names(tluSpp) == "SCIENTIFIC_NAME"] <- "ScientificName"
+
   tluCover <- get("tlu_CoverClass", envir = env)
 
   loc1 <- get("Locations", envir = env)
@@ -189,9 +191,9 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
                 "AreaHA", "X1oPlants", "X1oHGM", "X2oVegID", "DomVegID", "HGM_ID", "HGMClass",
                 "Mod_Desc", "DomVeg_Lev1", "DomVeg_Lev2", "DomVeg_Lev3", "SurveyType")
 
-  spp_cols <- c("ScientificName", "COMMON_NAME", "AUTHORITY", "ACRONYM", "COFC",
+  spp_cols <- c("ScientificName", "COMMON_NAME", "AUTHORITY", "FAMILY", "ACRONYM", "COFC",
                 "FN", "WET", "FORM", "HABIT", "USDA_ID",
-                "OH_TORE", "TYPE", "OH_STATUS", "EMP", "MW", "NCNE", "NOTES")
+                "OH_TORE", "TYPE", "OH_STATUS", "GROUP", "EMP", "MW", "NCNE", "NOTES")
 
   # Biomass
   bmass1 <- dplyr::left_join(loc, bmass, by = "LocationID", suffix = c("_Loc", "_bmass")) |>
@@ -205,7 +207,7 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
     dplyr::filter(FeatureTypes %in% c("VIBIplotID")) |>
     dplyr::filter(!is.na(EventID))
 
-  herb2 <- dplyr::left_join(herb1, tluSpp, by = c("Species" = "SCIENTIFIC_NAME"))
+  herb2 <- dplyr::left_join(herb1, tluSpp, by = c("Species" = "ScientificName"))
   names(herb2)[names(herb2) == "Species"] <- "ScientificName"
 
   herb_final <- herb2[,c(loc_cols, spp_cols, "ModNo", "CovCode", "VoucherNo", "Comments_Herb", "EventID")]
@@ -214,7 +216,7 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   woody1 <- dplyr::left_join(loc, woody, by = c("LocationID"), suffix = c("_Loc", "_Woody")) |>
     dplyr::filter(FeatureTypes %in% c("VIBIplotID")) |>
     dplyr::filter(!is.na(EventID))
-  woody2 <- dplyr::left_join(woody1, tluSpp, by = c("Scientific_Name" = "SCIENTIFIC_NAME"))
+  woody2 <- dplyr::left_join(woody1, tluSpp, by = c("Scientific_Name" = "ScientificName"))
   woody3 <- dplyr::left_join(woody2, tluWoody, by = "DiamID")
 
   # rename cols so consistent with herb view
@@ -232,6 +234,6 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   assign("biomassVIBI", bmass_final, envir = env)
   assign("herbVIBI", herb_final, envir = env)
   assign("woodyVIBI", woody_final, envir = env)
-  assign("tluTaxa", tluSpp, envir = env)
+  assign("tluSpp", tluSpp, envir = env)
   }
   }
