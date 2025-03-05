@@ -9,7 +9,8 @@ sumVIBI(
   survey_type = "all",
   hgm_class = "all",
   dom_veg1 = "all",
-  plotID = "all"
+  plotID = "all",
+  region = "NCNE"
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ sumVIBI(
 
 \item{plotID}{Quoted string. Default is 'all'. If specified will return data for only plots specified.
 Can choose multiple plots. Based on FeatureID in database.}
+
+\item{region}{Quoted string. Default is "NCNE". Specifies the Army Corps Region for OH. Options are "EMP", "MW", and "NCNE".}
 
 \item{nativity}{Quoted string. Filter on native status. Options are "all" (default), "adventive",
 "cryptogeni", or "native". Can choose multiple statuses.}
