@@ -1,6 +1,6 @@
 #' @title importData: Import tables from HTLN Wetlands database
 #'
-#' @importFrom dplyr filter left_join
+#' @importFrom dplyr filter left_join select
 #'
 #' @description This function imports tables from the Heartland Network database and compiles flat files
 #' to be incorporated into the data package. You can either set a data source name (DSN) called "HTLNwetlands"
@@ -94,7 +94,8 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   env <- if(new_env == TRUE){HTLNwetlands} else {.GlobalEnv}
 
   if(data_type %in% c("vibi", "all")){
-  tbls <- c("tbl_Locations",
+  tbls <- c("tbl_BigTrees",
+            "tbl_Locations",
             "tbl_SiteWPs",
             "tbl_VIBI_Herb",
             "tbl_VIBI_Herb_Biomass",
@@ -162,29 +163,44 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   tluHGM <- get("tlu_HGMClass", envir = env)
   tluWoody <- get("tlu_WoodyPlants", envir = env)
 
-  tluSpp <- get("tlu_WetlndSpeciesList", envir = env)
+  tluSpp <- get("tlu_WetlndSpeciesList", envir = env) |> unique()
   names(tluSpp)[names(tluSpp) == "SCIENTIFIC_NAME"] <- "ScientificName"
 
   tluCover <- get("tlu_CoverClass", envir = env)
 
   loc1 <- get("Locations", envir = env)
   loc2 <- dplyr::left_join(loc1, tluHGM, by = "HGM_ID")
-  loc <- dplyr::left_join(loc2, tluDom, by = c("DomVegID" = "DomVeg_ID"))
-  loc$FeatureTypes[loc$FeatureTypes == "VIBIPlotID"] <- "VIBIplotID"
+  loc3 <- dplyr::left_join(loc2, tluDom, by = c("DomVegID" = "DomVeg_ID"))
+  loc3$FeatureTypes[loc3$FeatureTypes == "VIBIPlotID"] <- "VIBIplotID"
+  loc4 <- loc3 |> dplyr::select(-DomVeg_Lev1)
 
-  sitewp <- get("SiteWPs", envir = env)
+  # Fill in missing DomVeg_Lev1 using X1ofPlants
+  #table(loc$X1oPlants, loc$DomVeg_Lev1)
+  veg_tbl <- data.frame(X1oPlants = c("PEM", "PFO", "PSS"), DomVeg_Lev1 = c("emergent", "forest", "shrub"))
+  loc <- left_join(loc4, veg_tbl, by = c("X1oPlants"))
+
+  #sitewp <- get("SiteWPs", envir = env) # can't find a reason to join this table to loc
 
   bmass <- get("VIBI_Herb_Biomass", envir = env)
   bmass$SampleDate = as.Date(sub("CUVAWetlnd", "", bmass$EventID), format = "%Y%b%d")
   bmass$SampleYear = as.numeric(format(bmass$SampleDate, format = "%Y"))
+  names(bmass)[names(bmass) == "Module"] <- "ModuleNo"
 
-  herb <- get("VIBI_Herb", envir = env)
-  herb$SampleDate = as.Date(sub("CUVAWetlnd", "", herb$EventID), format = "%Y%b%d")
-  herb$SampleYear = as.numeric(format(herb$SampleDate, format = "%Y"))
+  herb1 <- get("VIBI_Herb", envir = env)
+  herb1$SampleDate = as.Date(sub("CUVAWetlnd", "", herb1$EventID), format = "%Y%b%d")
+  herb1$SampleYear = as.numeric(format(herb1$SampleDate, format = "%Y"))
+  names(herb1)[names(herb1) == "ModNo"] <- "ModuleNo"
+  herb2 <- left_join(herb1, tluCover, by = c("CovCode" = "CoverClass"))
 
   woody <- get("VIBI_Woody", envir = env)
   woody$SampleDate = as.Date(sub("CUVAWetlnd", "", woody$EventID), format = "%Y%b%d")
   woody$SampleYear = as.numeric(format(woody$SampleDate, format = "%Y"))
+  names(woody)[names(woody) == "Module_No"] <- "ModuleNo"
+
+  btrees <- get("BigTrees", envir = env)
+  btrees$SampleDate = as.Date(sub("CUVAWetlnd", "", btrees$EventID), format = "%Y%b%d")
+  btrees$SampleYear = as.numeric(format(btrees$SampleDate, format = "%Y"))
+  names(btrees)[names(btrees) == "ModNo"] <- "ModuleNo"
 
   # Column names to order by/include for each view
   loc_cols <- c("LocationID", "FeatureID", "Park", "County", "SampleDate", "SampleYear", #"Latitude", "Longitude",
@@ -201,17 +217,18 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
     dplyr::filter(FeatureTypes %in% c("VIBIplotID")) |>
     dplyr::filter(!is.na(EventID))
 
-  bmass_final <- bmass1[,c(loc_cols, "VIBI_Herb_Biomass_ID", "Module", "Corner", "DryWt", "EventID")]
+  bmass_final <- bmass1[,c(loc_cols, "VIBI_Herb_Biomass_ID", "ModuleNo", "Corner", "DryWt", "EventID")]
 
   # Herbs
-  herb1 <- dplyr::left_join(loc, herb, by = "LocationID", suffix = c("_Loc", "_Herb")) |>
+  herb3 <- dplyr::left_join(loc, herb2, by = "LocationID", suffix = c("_Loc", "_Herb")) |>
     dplyr::filter(FeatureTypes %in% c("VIBIplotID")) |>
     dplyr::filter(!is.na(EventID))
 
-  herb2 <- dplyr::left_join(herb1, tluSpp, by = c("Species" = "ScientificName"))
-  names(herb2)[names(herb2) == "Species"] <- "ScientificName"
+  herb4 <- dplyr::left_join(herb3, tluSpp, by = c("Species" = "ScientificName"))
+  names(herb4)[names(herb4) == "Species"] <- "ScientificName"
+  herb4$COFC <- as.numeric(herb4$COFC)
 
-  herb_final <- herb2[,c(loc_cols, spp_cols, "ModNo", "CovCode", "VoucherNo", "Comments_Herb", "EventID")]
+  herb_final <- herb4[,c(loc_cols, spp_cols, "ModuleNo", "CovCode", "MidPoint", "VoucherNo", "Comments_Herb", "EventID")]
 
   # Woody
   woody1 <- dplyr::left_join(loc, woody, by = c("LocationID"), suffix = c("_Loc", "_Woody")) |>
@@ -223,9 +240,15 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   # rename cols so consistent with herb view
   names(woody3)[names(woody3) == "Scientific_Name"] <- "ScientificName"
   names(woody3)[names(woody3) == "FeatureID_Loc"] <- "FeatureID"
-  names(woody3)[names(woody3) == "Module_No"] <- "ModNo"
 
-  woody_final <- woody3[,c(loc_cols, spp_cols, "ModNo", "DiamID", "SortOrder", "DiamVal", "DBH_MidPt", "Count", "EventID")]
+  woody_final <- woody3[,c(loc_cols, spp_cols, "ModuleNo", "DiamID", "SortOrder", "DiamVal", "DBH_MidPt", "Count", "EventID")]
+
+  # BigTrees
+  btrees1 <- dplyr::left_join(loc, btrees, by = c("LocationID"), suffix = c("_Loc", "_BT"))
+  names(btrees1)[names(btrees1) == "Scientific_Name"] <- "ScientificName"
+  btrees2 <- dplyr::left_join(btrees1, tluSpp, by = "ScientificName")
+
+  btrees_final <- btrees2[,c(loc_cols, spp_cols, "ModuleNo", "DBH", "EventID")]
 
   # remove all but final tables from HTLNwetlands env.
   names(HTLNwetlands)
@@ -235,6 +258,7 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   assign("biomassVIBI", bmass_final, envir = env)
   assign("herbVIBI", herb_final, envir = env)
   assign("woodyVIBI", woody_final, envir = env)
+  assign("bigtreesVIBI", btrees_final, envir = env)
   assign("tluSpp", tluSpp, envir = env)
   }
   }
