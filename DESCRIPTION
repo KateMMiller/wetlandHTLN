@@ -10,7 +10,9 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports: 
-    dplyr
+    dplyr,
+    tidyr,
+    tidyselect
 Suggests: 
     DBI,
     odbc
