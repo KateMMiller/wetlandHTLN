@@ -244,15 +244,17 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   woody_final <- woody3[,c(loc_cols, spp_cols, "ModuleNo", "DiamID", "SortOrder", "DiamVal", "DBH_MidPt", "Count", "EventID")]
 
   # BigTrees
-  btrees1 <- dplyr::left_join(loc, btrees, by = c("LocationID"), suffix = c("_Loc", "_BT"))
+  btrees1 <- dplyr::left_join(loc, btrees, by = c("LocationID"), suffix = c("_Loc", "_BT")) |>
+    dplyr::filter(FeatureTypes == "VIBIplotID")
   names(btrees1)[names(btrees1) == "Scientific_Name"] <- "ScientificName"
-  btrees2 <- dplyr::left_join(btrees1, tluSpp, by = "ScientificName")
+  btrees2 <- dplyr::left_join(btrees1, tluSpp, by = "ScientificName") |>
+    filter(!is.na(EventID)) # dropping records with no bigtree data
 
   btrees_final <- btrees2[,c(loc_cols, spp_cols, "ModuleNo", "DBH", "EventID")]
 
   # remove all but final tables from HTLNwetlands env.
-  names(HTLNwetlands)
-  rm(list = ls(envir = env), envir = env)
+  #names(HTLNwetlands)
+  #rm(list = ls(envir = env), envir = env)
 
   assign("locations", loc, envir = env)
   assign("biomassVIBI", bmass_final, envir = env)

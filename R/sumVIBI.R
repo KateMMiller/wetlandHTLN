@@ -400,26 +400,60 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                         pct_invgram < 0.03 ~ 10,
                                         TRUE ~ NA_real_))
 
-  #---- Compile Woody metrics ----
+  #---- Compile Woody and Big Tree metrics ----
+  # For woody metrics to work, need to drop big tree records from tbl_VIBI_Woody and
+  # then row bind the Big Tree DBH records
   woody1 <- getWoody(years = years, survey_type = survey_type, hgm_class = hgm_class,
                      dom_veg1 = dom_veg1, plotID = plotID, nativity = 'all')
 
   woody1$Count[woody1$Count == -9999] <- NA_real_
   woody1 <- woody1 |> mutate(ba_cm2 = (pi*(DBH_MidPt/2)^2)*Count)
+  # Set wet status based on the column chosen, like in the macros code
+  woody1$WETreg <- ifelse(is.na(woody1[,region]), woody1$WET, woody1[,region])
+  woody1$WETreg <- ifelse(is.na(woody1$WETreg), "ND", woody1$WETreg)
+
+  woody2 <- woody1 |> filter(!DiamID %in% "BIG")
+
+  bigt1 <- getBigTrees(years = years, survey_type = survey_type, hgm_class = hgm_class,
+                       dom_veg1 = dom_veg1, plotID = plotID, nativity = 'all') |>
+    mutate(BIG_ba_cm2 = pi*(DBH/2)^2)
+
+  # Set wet status based on the column chosen, like in the macros code
+  bigt1$WETreg <- ifelse(is.na(bigt1[,region]), bigt1$WET, bigt1[,region])
+  bigt1$WETreg <- ifelse(is.na(bigt1$WETreg), "ND", bigt1$WETreg)
+
+  bigt <- bigt1 |> group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear,
+                            ModuleNo, DomVeg_Lev1, DomVeg_Lev2, OH_STATUS,
+                            SHADE, FORM, WET, WETreg,
+                            ScientificName) |>
+    summarize(BIG_BA = sum(BIG_ba_cm2, na.rm = T),
+              BIG_Count = sum(!is.na(DBH)),
+              DiamID = "BIG",
+              DiamVal = ">= 40",
+              .groups = 'drop')
+
+  woody_comb <- rbind(woody2 |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear,
+                                       ModuleNo, DomVeg_Lev1, DomVeg_Lev2, OH_STATUS, SHADE, FORM,
+                                       WET, WETreg,
+                                       DiamID, DiamVal, ScientificName, Count, ba_cm2),
+                      bigt |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear,
+                                     ModuleNo, DomVeg_Lev1, DomVeg_Lev2, OH_STATUS, SHADE, FORM,
+                                     WET, WETreg,
+                                     DiamID, DiamVal, ScientificName, Count = BIG_Count,
+                                     ba_cm2 = BIG_BA))
 
   # Calc rel. density
-  woody_rc <- woody1 |>
+  woody_rc <- woody_comb |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1) |>
     summarize(tot_stems = sum(Count, na.rm = T),
               tot_ba_cm2 = sum(ba_cm2, na.rm = T),
               .groups = 'drop')
 
-  woody <- left_join(woody1, woody_rc,
+  woody <- left_join(woody_comb, woody_rc,
                      by = c("LocationID", "FeatureID", "EventID", "SampleDate",
                             "SampleYear", "ModuleNo", "DomVeg_Lev1")) |>
     filter(!is.na(Count)) # dropping FeatureID 305 from 2015 for Mod 3 Carya ovata C5 with -9999.
     # It's also a duplicate record, as there's a Carya ovata in the same size class with a count in Mod 3.
-
 
   # woody_check <- woody |> group_by(FeatureID, EventID, SampleYear, ModuleNo) |>
   #   summarize(rel_sum = sum(rel_stems))
@@ -438,42 +472,88 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                     relden_smtree < 0.11 ~ 10,
                                     TRUE ~ NA_real_))
 
-  # Subcanopy IV for F and SH
-  # sum IV of native shade tolerant subcanopy species (FORM shrub and sm tree), plus
-  # IV of native FAC subcanopy (shrub and sm tree) species.
-  # For leatherleaf bogs, substitute invasive graminoid metric
-
-  subcan_iv1 <- woody |>
-    filter(DomVeg_Lev1 %in% c("forest", "shrub")) |>
-    filter(!(DomVeg_Lev2 %in% "Bog Shrub Swamp")) |>
+  # Canopy and Subcanopy IV
+  # Had to rbind all woody <40cm to Big Trees records to get correct DBH and BA for IV
+  IV1 <- woody |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo,
-             DomVeg_Lev1, ScientificName, FORM, DiamID) |>
-    summarize(Count = sum(Count), BA = sum(ba_cm2),
+             DomVeg_Lev1, DomVeg_Lev2, ScientificName, OH_STATUS, FORM, WET, WETreg, SHADE, DiamID) |>
+    summarize(Count = sum(Count),
+              BA = sum(ba_cm2),
               tot_ba_cm2 = first(tot_ba_cm2),
+              tot_stems = first(tot_stems),
               .groups = 'drop') |>
     pivot_wider(values_from = c(Count, BA), names_from = DiamID, values_fill = 0,
                 names_glue = "{DiamID}_{.value}") |>
     data.frame()
 
-  # ++++ ENDED HERE ++++ NEED TO ADD getBigTrees() and compile those by DBH for BA calc.
-
   # Add class columns potentially missing
   count_cols <- c("C0_Count", "C1_Count", "C2_Count", "C3_Count", "C4_Count",
                   "C5_Count", "C6_Count", "C7_Count", "C8_Count", "C9_Count",
-                  "C10_BA", "BIG_BA")
+                  "C10_Count", "BIG_Count")
   ba_cols <- c("C0_BA", "C1_BA", "C2_BA", "C3_BA", "C4_BA",
                "C5_BA", "C6_BA", "C7_BA", "C8_BA", "C9_BA",
                "C10_BA", "BIG_BA")
 
-  miss_cols <- setdiff(count_cols, c(names(subcan_iv1), names(ba_cols)))
-  subcan_iv1[miss_cols] <- 0
+  miss_cols <- setdiff(count_cols, c(names(IV1), names(ba_cols)))
+  IV1[miss_cols] <- 0
 
   # Calc rel class freq
-  subcan_iv1$rel_class_freq = rowSums(subcan_iv1[,class_cols] > 0, na.rm = T) / length(class_cols) # 12; in case # classes changes
-  subcan_iv1$rel_ba = rowSums(subcan_iv1[,ba_cols], na.rm = T)/subcan_iv1$tot_ba_cm2
+  IV1$rel_class_freq = rowSums(IV1[,count_cols] > 0, na.rm = T) / length(count_cols) # 12; in case # classes changes
+  IV1$rel_ba = rowSums(IV1[,ba_cols], na.rm = T)/IV1$tot_ba_cm2
+  IV1$rel_dens = rowSums(IV1[,count_cols], na.rm = T)/IV1$tot_stems
+  IV1[,c("rel_class_freq", "rel_ba", "rel_dens")][is.na(IV1[,c("rel_class_freq", "rel_ba", "rel_dens")])] <- 0
+  IV1$IV = (IV1$rel_class_freq + IV1$rel_ba + IV1$rel_dens)/3
 
-  head(subcan_iv1)
-  head(woody)
+  #---- Subcanopy IV ----
+  # for F and SH
+  # Manual states that subcan IV is the sum IV of
+  # 1. native shade tolerant subcanopy species (FORM shrub and sm tree), plus
+  # 2. IV of native FAC subcanopy (shrub and sm tree) species.
+  # However, in the spreadsheet there's no calc of the 2nd, likely assuming
+  # it's covered by the first, because it's all the same except wetness
+  # For leatherleaf bogs, substitute invasive graminoid metric
+
+
+  subcan_IV <- IV1 |>
+    filter(DomVeg_Lev1 %in% c("forest", "shrub")) |>
+    filter(!(DomVeg_Lev2 %in% "Bog Shrub Swamp")) |>
+    filter(OH_STATUS == "native") |>
+    filter(SHADE %in% c("partial", "shade")) |>
+    filter(FORM %in% c("shrub", "sm tree")) |>
+    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear,
+             ModuleNo, DomVeg_Lev1) |>
+    summarize(subcanIV_num = sum(IV),
+              subcanIV_den = sum(IV > 0), # sums a logical statement, so gives count
+              subcanIV = subcanIV_num/subcanIV_den,
+              .groups = 'drop') |>
+    mutate(SubcanIV_Score = case_when(DomVeg_Lev1 == "forest" & subcanIV <= 0.02 ~ 0,
+                                      DomVeg_Lev1 == "forest" & subcanIV > 0.02 & subcanIV <= 0.072 ~ 3,
+                                      DomVeg_Lev1 == "forest" & subcanIV > 0.072 & subcanIV <= 0.13 ~ 7,
+                                      DomVeg_Lev1 == "forest" & subcanIV > 0.13 ~ 10,
+
+                                      DomVeg_Lev1 == "shrub" & subcanIV <= 0.02 ~ 0,
+                                      DomVeg_Lev1 == "shrub" & subcanIV > 0.02 & subcanIV <= 0.05 ~ 3,
+                                      DomVeg_Lev1 == "shrub" & subcanIV > 0.05 & subcanIV <= 0.10 ~ 7,
+                                      DomVeg_Lev1 == "shrub" & subcanIV > 0.10 ~ 10,
+
+                                      TRUE ~ NA_real_))
+
+  canopy_IV <- IV1 |>
+    filter(DomVeg_Lev1 %in% c("forest")) |>
+    filter(OH_STATUS == "native") |>
+    filter(FORM %in% c("tree")) |>
+    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear,
+             ModuleNo, DomVeg_Lev1) |>
+    summarize(canopyIV_num = sum(IV),
+              canopyIV_den = sum(IV > 0), # sums a logical statement, so gives count
+              canopyIV = canopyIV_num/canopyIV_den,
+              .groups = 'drop') |>
+    mutate(CanopyIV_Score = case_when(canopyIV >= 0.21 ~ 0,
+                                      canopyIV >= 0.17 & canopyIV < 0.21 ~ 3,
+                                      canopyIV >= 0.14 & canopyIV < 0.17 ~ 7,
+                                      canopyIV < 0.14 ~ 10,
+                                      TRUE ~ NA_real_))
+
 
   #---- Compile Biomass Metrics ----
   bmass <- getBiomass(years = years, survey_type = survey_type, hgm_class = hgm_class,

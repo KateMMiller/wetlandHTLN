@@ -77,7 +77,7 @@ getBigTrees <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y"
   #---- Compile data ----
   env <- if(exists("HTLNwetlands")){HTLNwetlands} else {.GlobalEnv}
 
-  tryCatch(bigtree <- get("BigTrees", envir = env),
+  tryCatch(bigtree <- get("bigtreesVIBI", envir = env),
            error = function(e){stop("tbl_BigTrees not found. Please run importData() first.")})
 
   plots <- getPlots(plot_type = "VIBIplotID", survey_type = survey_type, hgm_class = hgm_class,
