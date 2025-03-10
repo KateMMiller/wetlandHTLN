@@ -4,7 +4,10 @@
 #' @importFrom tidyr pivot_wider
 #' @importFrom tidyselect starts_with
 #'
-#' @description This function summarizes plot-level VIBI and filters by plot, year, and plot types.
+#' @description This function summarizes plot-level VIBI and filters by plot, year, and plot types. Note
+#' that the Biomass metric assumes the aera sampled is always 0.01m2. Metric calculations and thresholds
+#' follow INTEGRATED WETLAND ASSESSMENT PROGRAM Part 9: Field Manual for the Vegetation Index of
+#' Biotic Integrity for Wetlands v. 1.5. Pages 17 - 20 and Table 2 were most useful.
 #'
 #' @param years Numeric. Filter on years of survey. Default is all.
 #'
@@ -280,7 +283,26 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                   DomVeg_Lev1 %in% c("forest") & FQAI > 19.0 & FQAI <= 24.0 ~ 7,
                                   DomVeg_Lev1 %in% c("forest") & FQAI > 24.0 ~ 10,
                                   TRUE ~ NA_real_
-                                  ))
+                                  ),
+           FQAI_Score_FQ = case_when(is.na(FQAI) ~ NA_real_,
+                                     FQAI < 10 ~ 0,
+                                     FQAI >= 10 & FQAI < 30 ~ (FQAI - 10)/20 * 50))
+  #++++ ENDED HERE ++++ FINISHING THE FQAI SCORES
+
+  CovWt_CofC <- herbs |>
+    mutate(cov_wt_C = rel_cov * COFC) |>
+    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1) |>
+    summarize(cov_wt_C = sum(cov_wt_C, na.rm = T), .groups = 'drop') |>
+    mutate(Cov_Wt_C_Score = case_when(is.na(cov_wt_C) ~ NA_real_,
+                                      cov_wt_C == 0 ~ 0,
+                                      cov_wt_C > 0 & cov_wt_C <= 6 ~ 3,
+                                      cov_wt_C > 6 ~ 10),
+           Cov_Wt_C_Score_FQ = case_when(is.na(cov_wt_C) ~ NA_real_,
+                                         cov_wt_C == 0 ~ 0,
+                                         cov_wt_C > 0 & cov_wt_C <= 6 ~ (cov_wt_C/6) * 50,
+                                         cov_wt_C > 6 ~ 50))
+
+
   # % Bryophyte using rel_cov
   pct_bryo <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
@@ -298,15 +320,18 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
 
 
   # % Hydrophyte using rel_cov: OH_STATUS = native, SHADE = shade or partial, WET/WETreg = FACW (FACW) OBL
+  # *if total cover(sum of cover values for all species observed in sample plot is <10%, all % metrics scored as 0)
   pct_hydro_reg <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
-           ScientificName, OH_STATUS, SHADE, WETreg, rel_cov) |>
+           ScientificName, OH_STATUS, SHADE, WETreg, tot_cov, rel_cov) |>
     filter(OH_STATUS == "native" & WETreg %in% c("FACW", "OBL", "(FACW)") &
              SHADE %in% c("partial", "shade")) |> #unique() |>
     filter(DomVeg_Lev1 %in% c("forest")) |>
-    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo) |>
-    summarize(pct_hydro_reg = sum(rel_cov, na.rm = T), .groups = 'drop') |>
+    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, tot_cov) |>
+    summarize(pct_hydro_reg = sum(rel_cov, na.rm = T),
+              .groups = 'drop') |>
     mutate(PctHydro_Score = case_when(is.na(pct_hydro_reg) ~ NA_real_,
+                                      tot_cov < 10 ~ 0, # first case
                                       pct_hydro_reg <= 0.1 ~ 0,
                                       pct_hydro_reg > 0.1 & pct_hydro_reg <= 0.15 ~ 3,
                                       pct_hydro_reg > 0.15 & pct_hydro_reg <= 0.28 ~ 7,
@@ -315,12 +340,13 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
 
   pct_hydro <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
-           ScientificName, OH_STATUS, SHADE, WET, rel_cov) |>
+           ScientificName, OH_STATUS, SHADE, WET, tot_cov, rel_cov) |>
     filter(OH_STATUS == "native" & WET %in% c("FACW", "OBL", "(FACW)") & SHADE %in% c("partial", "shade")) |> #unique() |>
     filter(DomVeg_Lev1 %in% c("forest")) |>
-    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo) |>
+    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, tot_cov) |>
     summarize(pct_hydro = sum(rel_cov, na.rm = T), .groups = 'drop') |>
     mutate(PctHydro_Score = case_when(is.na(pct_hydro) ~ NA_real_,
+                                      tot_cov < 10 ~ 0, # first case
                                       pct_hydro <= 0.1 ~ 0,
                                       pct_hydro > 0.1 & pct_hydro <= 0.15 ~ 3,
                                       pct_hydro > 0.15 & pct_hydro <= 0.28 ~ 7,
@@ -328,14 +354,16 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                       TRUE ~ NA_real_))
 
   # % sensitive - rel cover of COFC >=6, for DomVeg_Lev1 = shrub, buttonbush is not included as %sensitive
+  # *if total cover(sum of cover values for all species observed in sample plot is <10%, all % metrics scored as 0)
   pct_sens <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
-           ScientificName, COFC, rel_cov) |>
+           ScientificName, COFC, tot_cov, rel_cov) |>
     filter(COFC >= 6) |>
     filter(!(DomVeg_Lev1 == "shrub" & ScientificName %in% "Cephalanthus occidentalis")) |>
-    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1) |>
+    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1, tot_cov) |>
     summarize(pct_sens = sum(rel_cov, na.rm = T), .groups = 'drop') |>
     mutate(PctSens_Score = case_when(is.na(pct_sens) ~ NA_real_,
+                                     tot_cov < 10 ~ 0, # first case,
                                      DomVeg_Lev1 %in% c("emergent") & pct_sens <= 0.025 ~ 0,
                                      DomVeg_Lev1 %in% c("emergent") & pct_sens > 0.025 & pct_sens <= 0.10 ~ 3,
                                      DomVeg_Lev1 %in% c("emergent") & pct_sens > 0.10 & pct_sens <= 0.15 ~ 7,
@@ -353,13 +381,15 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                      TRUE ~ NA_real_))
 
   # % tolerant
+  # *if total cover(sum of cover values for all species observed in sample plot is <10%, all % metrics scored as 0)
   pct_tol <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
-           ScientificName, COFC, rel_cov) |>
+           ScientificName, COFC, tot_cov, rel_cov) |>
     filter(COFC <= 2) |>
-    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1) |>
+    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1, tot_cov) |>
     summarize(pct_tol = sum(rel_cov, na.rm = T), .groups = 'drop') |>
     mutate(PctTol_Score = case_when(is.na(pct_tol) ~ NA_real_,
+                                    tot_cov < 10 ~ 0, # first case
                                     DomVeg_Lev1 %in% c("emergent") & pct_tol >= 0.60 ~ 0,
                                     DomVeg_Lev1 %in% c("emergent") & pct_tol >= 0.40  & pct_tol < 0.60 ~ 3,
                                     DomVeg_Lev1 %in% c("emergent") & pct_tol >= 0.20 & pct_tol < 0.40 ~ 7,
@@ -377,13 +407,14 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                     TRUE ~ NA_real_))
 
   # Invasive graminoids: Phalaris arundinaceae, Typha spp. Phragmites australis
+  # *if total cover(sum of cover values for all species observed in sample plot is <10%, all % metrics scored as 0)
   inv_grams <- c("Phalaris arundinacea", "Phragmites australis ssp. australis",
                  "Typha angustifolia", "Typha latifolia", "Typha x glauca",
                  "Typha minima", "Typha sp.")
 
   pct_invgram <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1, DomVeg_Lev2,
-           ScientificName, rel_cov) |>
+           ScientificName, tot_cov, rel_cov) |>
     filter(ScientificName %in% inv_grams) |> #unique() |>
     filter(DomVeg_Lev1 %in% c("emergent") |
              (DomVeg_Lev1 == "shrub" & DomVeg_Lev2 == "Bog Shrub Swamp")) |>
@@ -391,9 +422,10 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
     # EPA manual states that this metric replaces the subcanopy IV metric for this community.
     # Based on the VIBI spreadsheet and the HTLN database, Bog Shrub Swamp seems to cover
     # that, although there's not a site like this in the data.
-    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo) |>
+    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, tot_cov) |>
     summarize(pct_invgram = sum(rel_cov, na.rm = T), .groups = 'drop') |>
     mutate(PctInvGram_Score = case_when(is.na(pct_invgram) ~ NA_real_,
+                                        tot_cov < 10 ~ 0, # first case
                                         pct_invgram >= 0.31 ~ 0,
                                         pct_invgram >= 0.15 & pct_invgram < 0.31 ~ 3,
                                         pct_invgram >= 0.03 & pct_invgram < 0.15 ~ 7,
@@ -411,7 +443,7 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   # Set wet status based on the column chosen, like in the macros code
   woody1$WETreg <- ifelse(is.na(woody1[,region]), woody1$WET, woody1[,region])
   woody1$WETreg <- ifelse(is.na(woody1$WETreg), "ND", woody1$WETreg)
-
+  woody1$AreaHA <- as.numeric(woody1$AreaHA)
   woody2 <- woody1 |> filter(!DiamID %in% "BIG")
 
   bigt1 <- getBigTrees(years = years, survey_type = survey_type, hgm_class = hgm_class,
@@ -421,9 +453,10 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   # Set wet status based on the column chosen, like in the macros code
   bigt1$WETreg <- ifelse(is.na(bigt1[,region]), bigt1$WET, bigt1[,region])
   bigt1$WETreg <- ifelse(is.na(bigt1$WETreg), "ND", bigt1$WETreg)
+  bigt1$AreaHA <- as.numeric(bigt1$AreaHA)
 
   bigt <- bigt1 |> group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear,
-                            ModuleNo, DomVeg_Lev1, DomVeg_Lev2, OH_STATUS,
+                            ModuleNo, AreaHA, DomVeg_Lev1, DomVeg_Lev2, OH_STATUS,
                             SHADE, FORM, WET, WETreg,
                             ScientificName) |>
     summarize(BIG_BA = sum(BIG_ba_cm2, na.rm = T),
@@ -433,12 +466,12 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
               .groups = 'drop')
 
   woody_comb <- rbind(woody2 |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear,
-                                       ModuleNo, DomVeg_Lev1, DomVeg_Lev2, OH_STATUS, SHADE, FORM,
-                                       WET, WETreg,
+                                       ModuleNo, AreaHA, DomVeg_Lev1, DomVeg_Lev2, OH_STATUS, SHADE, FORM,
+                                       # WET, WETreg, # don't need b/c covered by first filter
                                        DiamID, DiamVal, ScientificName, Count, ba_cm2),
                       bigt |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear,
-                                     ModuleNo, DomVeg_Lev1, DomVeg_Lev2, OH_STATUS, SHADE, FORM,
-                                     WET, WETreg,
+                                     ModuleNo, AreaHA, DomVeg_Lev1, DomVeg_Lev2, OH_STATUS, SHADE, FORM,
+                                     # WET, WETreg, # don't need b/c covered by first filter
                                      DiamID, DiamVal, ScientificName, Count = BIG_Count,
                                      ba_cm2 = BIG_BA))
 
@@ -446,6 +479,7 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   woody_rc <- woody_comb |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1) |>
     summarize(tot_stems = sum(Count, na.rm = T),
+              tot_stems_per_ha = tot_stems/first(AreaHA),
               tot_ba_cm2 = sum(ba_cm2, na.rm = T),
               .groups = 'drop')
 
@@ -462,10 +496,15 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
 
   # Pole Timber rel dens
   #table(woody$DiamID, woody$DiamVal) C5-C7
+  #**If no or only a few woody stems >1m tall in sample plot or if stems per ha <10, score metric as 0.
+  # Interpreting this as <= 3 stems >1m tall
   pole <- woody |> filter(DomVeg_Lev1 == "forest") |> filter(DiamID %in% c("C5", "C6", "C7")) |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1) |>
-    summarize(relden_smtree = sum(Count)/first(tot_stems), .groups = 'drop') |>
+    summarize(relden_smtree = sum(Count)/first(tot_stems),
+              tot_stems_per_ha = first(tot_stems_per_ha),
+              .groups = 'drop') |>
     mutate(SmTree_Score = case_when(is.na(relden_smtree) ~ NA_real_,
+                                    tot_stems_per_ha < 10 ~ 0, # ** Table 2
                                     relden_smtree >= 0.32 ~ 0,
                                     relden_smtree >= 0.22 & relden_smtree < 0.32 ~ 3,
                                     relden_smtree >= 0.11 & relden_smtree < 0.22 ~ 7,
@@ -474,13 +513,14 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
 
   # Canopy and Subcanopy IV
   # Had to rbind all woody <40cm to Big Trees records to get correct DBH and BA for IV
-  IV1 <- woody |>
+  IV <- woody |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo,
-             DomVeg_Lev1, DomVeg_Lev2, ScientificName, OH_STATUS, FORM, WET, WETreg, SHADE, DiamID) |>
+             DomVeg_Lev1, DomVeg_Lev2, ScientificName, OH_STATUS, FORM, SHADE, DiamID) |>
     summarize(Count = sum(Count),
               BA = sum(ba_cm2),
               tot_ba_cm2 = first(tot_ba_cm2),
               tot_stems = first(tot_stems),
+              tot_stems_per_ha = first(tot_stems_per_ha),
               .groups = 'drop') |>
     pivot_wider(values_from = c(Count, BA), names_from = DiamID, values_fill = 0,
                 names_glue = "{DiamID}_{.value}") |>
@@ -494,15 +534,15 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                "C5_BA", "C6_BA", "C7_BA", "C8_BA", "C9_BA",
                "C10_BA", "BIG_BA")
 
-  miss_cols <- setdiff(count_cols, c(names(IV1), names(ba_cols)))
-  IV1[miss_cols] <- 0
+  miss_cols <- setdiff(count_cols, c(names(IV), names(ba_cols)))
+  IV[miss_cols] <- 0
 
   # Calc rel class freq
-  IV1$rel_class_freq = rowSums(IV1[,count_cols] > 0, na.rm = T) / length(count_cols) # 12; in case # classes changes
-  IV1$rel_ba = rowSums(IV1[,ba_cols], na.rm = T)/IV1$tot_ba_cm2
-  IV1$rel_dens = rowSums(IV1[,count_cols], na.rm = T)/IV1$tot_stems
-  IV1[,c("rel_class_freq", "rel_ba", "rel_dens")][is.na(IV1[,c("rel_class_freq", "rel_ba", "rel_dens")])] <- 0
-  IV1$IV = (IV1$rel_class_freq + IV1$rel_ba + IV1$rel_dens)/3
+  IV$rel_class_freq = rowSums(IV[,count_cols] > 0, na.rm = T) / length(count_cols) # 12; in case # classes changes
+  IV$rel_ba = rowSums(IV[,ba_cols], na.rm = T)/IV$tot_ba_cm2
+  IV$rel_dens = rowSums(IV[,count_cols], na.rm = T)/IV$tot_stems
+  IV[,c("rel_class_freq", "rel_ba", "rel_dens")][is.na(IV[,c("rel_class_freq", "rel_ba", "rel_dens")])] <- 0
+  IV$IV = (IV$rel_class_freq + IV$rel_ba + IV$rel_dens)/3
 
   #---- Subcanopy IV ----
   # for F and SH
@@ -512,21 +552,22 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   # However, in the spreadsheet there's no calc of the 2nd, likely assuming
   # it's covered by the first, because it's all the same except wetness
   # For leatherleaf bogs, substitute invasive graminoid metric
+  # ** If no or only a few woody stems >1m tall in sample plot or if stems per ha <10, score metric as 0.
 
-
-  subcan_IV <- IV1 |>
+  subcan_IV <- IV |>
     filter(DomVeg_Lev1 %in% c("forest", "shrub")) |>
     filter(!(DomVeg_Lev2 %in% "Bog Shrub Swamp")) |>
     filter(OH_STATUS == "native") |>
     filter(SHADE %in% c("partial", "shade")) |>
     filter(FORM %in% c("shrub", "sm tree")) |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear,
-             ModuleNo, DomVeg_Lev1) |>
+             ModuleNo, DomVeg_Lev1, tot_stems_per_ha) |>
     summarize(subcanIV_num = sum(IV),
               subcanIV_den = sum(IV > 0), # sums a logical statement, so gives count
               subcanIV = subcanIV_num/subcanIV_den,
               .groups = 'drop') |>
-    mutate(SubcanIV_Score = case_when(DomVeg_Lev1 == "forest" & subcanIV <= 0.02 ~ 0,
+    mutate(SubcanIV_Score = case_when(tot_stems_per_ha < 10 ~ 0, #** Table 2
+                                      DomVeg_Lev1 == "forest" & subcanIV <= 0.02 ~ 0,
                                       DomVeg_Lev1 == "forest" & subcanIV > 0.02 & subcanIV <= 0.072 ~ 3,
                                       DomVeg_Lev1 == "forest" & subcanIV > 0.072 & subcanIV <= 0.13 ~ 7,
                                       DomVeg_Lev1 == "forest" & subcanIV > 0.13 ~ 10,
@@ -538,7 +579,7 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
 
                                       TRUE ~ NA_real_))
 
-  canopy_IV <- IV1 |>
+  canopy_IV <- IV |>
     filter(DomVeg_Lev1 %in% c("forest")) |>
     filter(OH_STATUS == "native") |>
     filter(FORM %in% c("tree")) |>
@@ -551,13 +592,48 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
     mutate(CanopyIV_Score = case_when(canopyIV >= 0.21 ~ 0,
                                       canopyIV >= 0.17 & canopyIV < 0.21 ~ 3,
                                       canopyIV >= 0.14 & canopyIV < 0.17 ~ 7,
-                                      canopyIV < 0.14 ~ 10,
+                                      canopyIV > 0 & canopyIV < 0.14 ~ 10,
+                                      canopyIV == 0 ~ 0, # from *** in Table 2
                                       TRUE ~ NA_real_))
 
+  # % Unvegetated
+  # **** This metric should be calculated for wetland mitigation sites where perennial
+  # hydrophyte vegetation is not well established or where g/m2 of biomass is less than 100.
+  # It can also be used as a biomass metric substitute for mitigation wetlands
+  # or other emergent sites where biomass cannot be collected (Table 2)
+  # It does not appear to be a metric collected by CUVA, so I won't include it. I'm guessing it's
+  # because there are no mitigation wetlands with minimal plant establishment
+
+  # **** This metric should be calculated for wetland mitigation sites where perennial hydrophyte
+  # vegetation is not well established or where g/m2 of biomass is less than 100. It can also be
+  # used as a biomass metric substitute for mitigation wetlands or other emergent sites where
+  # biomass cannot be collected.
 
   #---- Compile Biomass Metrics ----
-  bmass <- getBiomass(years = years, survey_type = survey_type, hgm_class = hgm_class,
+  # Assumes area sampled is always 0.01m2 to get grams/m2
+  bmass1 <- getBiomass(years = years, survey_type = survey_type, hgm_class = hgm_class,
                       dom_veg1 = dom_veg1, plotID = plotID)
+
+  bmass <- bmass1 |>
+           filter(DomVeg_Lev1 == "emergent") |>
+           mutate(weight_g_m2 = DryWt/0.01) |>
+           group_by(LocationID, FeatureID, SampleDate, SampleYear, TotalMods, AreaHA,
+                    ModuleNo, DomVeg_Lev1) |>
+           summarize(num_bmass_samp = sum(!is.na(DryWt)),
+                     avg_bmass = sum(weight_g_m2)/num_bmass_samp,
+                     .groups = 'drop') |>
+           mutate(Biomass_Score = case_when(is.na(avg_bmass) ~ NA_real_,
+                                            avg_bmass > 800 ~ 0,
+                                            avg_bmass >= 451 & avg_bmass <= 801 ~ 3,
+                                            avg_bmass >= 201 & avg_bmass < 451 ~ 7,
+                                            avg_bmass >= 100 & avg_bmass < 201 ~ 10,
+                                            avg_bmass < 100 ~ 0,
+                                            TRUE ~ NA_real_
+                                            ))
+
+  #---- Combine metrics for VIBI score and final rating ----
+
+
 
 
 
