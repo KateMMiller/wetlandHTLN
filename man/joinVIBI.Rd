@@ -29,9 +29,6 @@ joinVIBI(
 Can choose multiple plots. Based on FeatureID in database.}
 
 \item{region}{Quoted string. Default is "NCNE". Specifies the Army Corps Region for OH. Options are "EMP", "MW", and "NCNE".}
-
-\item{nativity}{Quoted string. Filter on native status. Options are "all" (default), "adventive",
-"cryptogeni", or "native". Can choose multiple statuses.}
 }
 \value{
 Returns a data frame of VIBI calculations for each module of each plot
@@ -41,7 +38,8 @@ This function summarizes module-level VIBI and filters by plot, year, and plot t
 that the Biomass metric assumes the aera sampled is always 0.01m2. Metric calculations and thresholds
 follow INTEGRATED WETLAND ASSESSMENT PROGRAM Part 9: Field Manual for the Vegetation Index of
 Biotic Integrity for Wetlands v. 1.5. Pages 17 - 20 and Table 2 were most useful. For plot-level average
-VIBI scores, use sumVIBI.
+VIBI scores, use sumVIBI. Currently, if there's only a biomass record for a given year, those records are
+dropped.
 }
 \examples{
 \dontrun{

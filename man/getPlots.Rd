@@ -13,8 +13,8 @@ getPlots(
 )
 }
 \arguments{
-\item{plot_type}{Filter on plot type. Options are "all", "VIBIplotID", (default), "oramID", "wellID", and "wetlndID".
-Can choose multiple options.}
+\item{plot_type}{Filter on plot type. Options are "all", "VIBIplotID", (default), "oramID",
+"wellID", and "wetlndID". Can choose multiple options.}
 
 \item{survey_type}{Filter on survey type of plots. Options are "all" (default), "reference",
 "survey", "survey, womc", "womc", and "womc, reference". Can choose multiple options.}

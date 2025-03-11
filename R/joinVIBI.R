@@ -1,6 +1,6 @@
 #' @title joinVIBI: join module-level VIBI metrics
 #'
-#' @importFrom dplyr between c_across case_when filter first group_by left_join mutate select summarize
+#' @importFrom dplyr arrange between case_when filter first group_by left_join mutate select summarize
 #' @importFrom tidyr pivot_wider
 #' @importFrom tidyselect starts_with
 #' @importFrom purrr reduce
@@ -9,7 +9,8 @@
 #' that the Biomass metric assumes the aera sampled is always 0.01m2. Metric calculations and thresholds
 #' follow INTEGRATED WETLAND ASSESSMENT PROGRAM Part 9: Field Manual for the Vegetation Index of
 #' Biotic Integrity for Wetlands v. 1.5. Pages 17 - 20 and Table 2 were most useful. For plot-level average
-#' VIBI scores, use sumVIBI.
+#' VIBI scores, use sumVIBI. Currently, if there's only a biomass record for a given year, those records are
+#' dropped.
 #'
 #' @param years Numeric. Filter on years of survey. Default is all.
 #'
@@ -24,9 +25,6 @@
 #'
 #' @param plotID Quoted string. Default is 'all'. If specified will return data for only plots specified.
 #' Can choose multiple plots. Based on FeatureID in database.
-#'
-#' @param nativity Quoted string. Filter on native status. Options are "all" (default), "adventive",
-#' "cryptogeni", or "native". Can choose multiple statuses.
 #'
 #' @param region Quoted string. Default is "NCNE". Specifies the Army Corps Region for OH. Options are "EMP", "MW", and "NCNE".
 #'
@@ -53,7 +51,6 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   hgm_class <- match.arg(hgm_class, choices = c("all", "Depression", "Impoundment", "Riverine", "Slope"),
                          several.ok = T)
   dom_veg1 <- match.arg(dom_veg1, choices = c("all", "Emergent", "Forest", "Shrub"), several.ok = T)
-  nativity <- match.arg(nativity, choices = c("all", "adventive", "cryptogeni", "native"), several.ok = T)
   region <- match.arg(region, choices = c("NCNE", "EMP", "MW"))
   stopifnot(class(years) == "numeric" | class(years) == "integer", years >= 2008)
 
@@ -96,13 +93,17 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
     filter(!is.na(MidPoint)) |>  # dropping FeatureID 1007 from 2023 for Mod NA with blank Species and cover.
     mutate(rel_cov = MidPoint/tot_cov)
 
+  # Create table to left_join with herb vibi metrics; There are no sample qualifiers for sampled, but non present
+  # So assuming if there's a record in this df below, and the community matches, the VIBI should be 0 for herb vibis
+  herbs_lj <- herbs |> select(LocationID, FeatureID, DomVeg_Lev1, SampleYear, ModuleNo) |> unique()
+
   # herbs_check <- herbs |> group_by(LocationID, FeatureID, EventID, SampleYear, ModuleNo) |>
   #   summarize(sum_rel = sum(rel_cov))
   # table(herbs_check$sum_rel, useNA = 'always') # all sum to 1
 
   # Using macros cases to determine the exact ranges of VIBI scores (ie whether <= or < vs >= or >)
   # Carex Community E, SH
-  carex <- herbs |>
+  carex1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, ModuleNo, genus, ScientificName) |>
     filter(DomVeg_Lev1 %in% c("emergent", "shrub")) |>
     filter(genus == "Carex") |> unique() |>
@@ -115,8 +116,13 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                    Num_Carex >= 5 ~ 10,
                                    TRUE ~ NA_real_))
 
+  # Add 0s where no Carex were found in emergent or shrub wetlands
+  carex <- left_join(herbs_lj, carex1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+  carex$Num_Carex[is.na(carex$Num_Carex) & carex$DomVeg_Lev1 %in% c("emergent", "shrub")] <- 0
+  carex$Carex_Score[carex$Num_Carex == 0 & carex$DomVeg_Lev1 %in% c("emergent", "shrub")] <- 0
+
   # cyperaceae Community Ecoastal only
-  cyper <- herbs |>
+  cyper1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear,
            DomVeg_Lev1, ModuleNo, FAMILY, ScientificName) |>
     filter(DomVeg_Lev1 == "emergent-coastal") |>
@@ -130,8 +136,13 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                    Num_Cyper >= 7 ~ 10,
                                    TRUE ~ NA_real_))
 
+  # Add 0s where no Cyperaceae were found in emergent-coastal
+  cyper <- left_join(herbs_lj, cyper1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+  cyper$Num_Cyper[is.na(cyper$Num_Cyper) & cyper$DomVeg_Lev1 %in% c("emergent-coastal")] <- 0
+  cyper$Cyper_Score[cyper$Num_Cyper == 0 & cyper$DomVeg_Lev1 %in% c("emergent-coastal")] <- 0
+
   # dicot Community E SH
-  dicot <- herbs |>
+  dicot1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
            OH_STATUS, TYPE, ScientificName) |>
     filter(DomVeg_Lev1 %in% c("emergent", "shrub")) |>
@@ -150,8 +161,13 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                    DomVeg_Lev1 == "shrub" & Num_Dicot >= 24 ~ 10,
                                    TRUE ~ NA_real_))
 
+  # Add 0s where no dicots were found
+  dicot <- left_join(herbs_lj, dicot1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+  dicot$Num_Dicot[is.na(dicot$Num_Dicot)] <- 0
+  dicot$Dicot_Score[dicot$Num_Dicot == 0] <- 0
+
   # Shade community F
-  shade <- herbs |>
+  shade1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
            OH_STATUS, SHADE, ScientificName) |>
     filter(DomVeg_Lev1 == "forest") |>
@@ -165,8 +181,15 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                    Num_Shade >= 21 ~ 10,
                                    TRUE ~ NA_real_))
 
+
+  # Add 0s where no shade spp were found in forest
+  shade <- left_join(herbs_lj, shade1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+  shade$Num_Shade[is.na(shade$Num_Shade) & shade$DomVeg_Lev1 %in% c("forest")] <- 0
+  shade$Shade_Score[shade$Num_Shade == 0 & shade$DomVeg_Lev1 %in% c("forest")] <- 0
+
+
   # Shrub- region Community E, SH
-  shrub_reg <- herbs |>
+  shrub_reg1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
            OH_STATUS, FORM, WETreg, ScientificName) |>
     filter(DomVeg_Lev1 %in% c("emergent", "shrub")) |>
@@ -179,8 +202,14 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                        between(Num_Shrub_reg, 3, 4) ~ 7,
                                        Num_Shrub_reg >= 5 ~ 10,
                                        TRUE ~ NA_real_))
+
+  # Add 0s where no Shrub were found in emergent or shrub wetlands
+  shrub_reg <- left_join(herbs_lj, shrub_reg1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+  shrub_reg$Num_Shrub[is.na(shrub_reg$Num_Shrub) & shrub_reg$DomVeg_Lev1 %in% c("emergent", "shrub")] <- 0
+  shrub_reg$Shrub_Score[shrub_reg$Num_Shrub == 0 & shrub_reg$DomVeg_Lev1 %in% c("emergent", "shrub")] <- 0
+
   # Shrub- statewide
-  shrub <- herbs |>
+  shrub1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
            OH_STATUS, FORM, WET, ScientificName) |>
     filter(DomVeg_Lev1 %in% c("emergent", "shrub")) |>
@@ -194,8 +223,13 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                    Num_Shrub >= 5 ~ 10,
                                    TRUE ~ NA_real_))
 
+  # Add 0s where no Shrub were found in emergent or shrub wetlands
+  shrub <- left_join(herbs_lj, shrub1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+  shrub$Num_Shrub[is.na(shrub$Num_Shrub) & shrub$DomVeg_Lev1 %in% c("emergent", "shrub")] <- 0
+  shrub$Shrub_Score[shrub$Num_Shrub == 0 & shrub$DomVeg_Lev1 %in% c("emergent", "shrub")] <- 0
+
   # Hydrophyte- region # native FACW and OBL
-  hydrop_reg <- herbs |>
+  hydrop_reg1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
            OH_STATUS, WETreg, ScientificName) |>
     filter(DomVeg_Lev1 %in% c("emergent", "shrub")) |>
@@ -215,8 +249,13 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
 
                                        TRUE ~ NA_real_))
 
+  # Add 0s where no hydrophytes were found in emergent or shrub wetlands
+  hydrop_reg <- left_join(herbs_lj, hydrop_reg1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+  hydrop_reg$Num_Hydro[is.na(hydrop_reg$Num_Hydro) & hydrop_reg$DomVeg_Lev1 %in% c("emergent", "shrub")] <- 0
+  hydrop_reg$Hydro_Score[hydrop_reg$Num_Hydro == 0 & hydrop_reg$DomVeg_Lev1 %in% c("emergent", "shrub")] <- 0
+
   # hydro - statewide
-  hydrop <- herbs |>
+  hydrop1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
            OH_STATUS, WET, ScientificName) |>
     filter(DomVeg_Lev1 %in% c("emergent", "shrub")) |>
@@ -236,8 +275,13 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
 
                                          TRUE ~ NA_real_))
 
+  # Add 0s where no hydrophytes were found in emergent or shrub wetlands
+  hydrop <- left_join(herbs_lj, hydrop1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+  hydrop$Num_Hydro[is.na(hydrop$Num_Hydro) & hydrop$DomVeg_Lev1 %in% c("emergent", "shrub")] <- 0
+  hydrop$Hydro_Score[hydrop$Num_Hydro == 0 & hydrop$DomVeg_Lev1 %in% c("emergent", "shrub")] <- 0
+
   # annual : perennial ratio - did not explicitly state native, so not including OH_STATUS in summary
-  ap_ratio <- herbs |>
+  ap_ratio1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
            HABIT, ScientificName) |>
     filter(DomVeg_Lev1 %in% c("emergent")) |>
@@ -254,8 +298,13 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                 TRUE ~ NA_real_
                                 ))
 
+  # Add 0s where no ann/per were found in emergent
+  ap_ratio <- left_join(herbs_lj, ap_ratio1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+  ap_ratio$AP_Ratio[is.na(ap_ratio$AP_Ratio) & ap_ratio$DomVeg_Lev1 %in% c("emergent")] <- 0
+  ap_ratio$AP_Score[ap_ratio$AP_Ratio == 0 & ap_ratio$DomVeg_Lev1 %in% c("emergent")] <- 0
+
   # Seedless Vascular Plant metric (# ferns and fern allies)
-  svp <- herbs |>
+  svp1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
            FORM, ScientificName) |>
     filter(DomVeg_Lev1 %in% c("forest", "shrub")) |>
@@ -268,6 +317,12 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                  Num_SVP == 2 ~ 7,
                                  Num_SVP >= 3 ~ 10,
                                  TRUE ~ NA_real_))
+
+
+  # Add 0s where no sporophytes were found in emergent
+  svp <- left_join(herbs_lj, svp1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+  svp$Num_SVP[is.na(svp$Num_SVP) & svp$DomVeg_Lev1 %in% c("forest", "shrub")] <- 0
+  svp$SVP_Score[svp$Num_SVP == 0 & svp$DomVeg_Lev1 %in% c("forest", "shrub")] <- 0
 
   # FQAI Equation 7, page 7 of
     # https://dam.assets.ohio.gov/image/upload/epa.ohio.gov/Portals/35/wetlands/Ohio_FQAI.pdf
@@ -313,7 +368,7 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                          cov_wt_C > 6 ~ 50))
 
   # % Bryophyte using rel_cov
-  pct_bryo <- herbs |>
+  pct_bryo1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
            ScientificName, FORM, rel_cov) |>
     filter(DomVeg_Lev1 %in% c("forest", "shrub")) |>
@@ -328,9 +383,15 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                      TRUE ~ NA_real_))
 
 
+  # Add 0s where no bryos were found in forest or shrub
+  pct_bryo <- left_join(herbs_lj, pct_bryo1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+  pct_bryo$Pct_Bryo[is.na(pct_bryo$Pct_Bryo) & pct_bryo$DomVeg_Lev1 %in% c("forest", "shrub")] <- 0
+  pct_bryo$PctBryo_Score[pct_bryo$Pct_Bryo == 0 & pct_bryo$DomVeg_Lev1 %in% c("forest", "shrub")] <- 0
+
+
   # % Hydrophyte using rel_cov: OH_STATUS = native, SHADE = shade or partial, WET/WETreg = FACW (FACW) OBL
   # *if total cover(sum of cover values for all species observed in sample plot is <10%, all % metrics scored as 0)
-  pct_hydro_reg <- herbs |>
+  pct_hydro_reg1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
            ScientificName, OH_STATUS, SHADE, WETreg, tot_cov, rel_cov) |>
     filter(OH_STATUS == "native" & WETreg %in% c("FACW", "OBL", "(FACW)") &
@@ -347,7 +408,13 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                           Pct_Hydro_reg > 0.28 ~ 10,
                                           TRUE ~ NA_real_))
 
-  pct_hydro <- herbs |>
+  # Add 0s where no hydros were found in forest or shrub
+  pct_hydro_reg <- left_join(herbs_lj, pct_hydro_reg1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+  pct_hydro_reg$Pct_Hydro_reg[is.na(pct_hydro_reg$Pct_Hydro_reg) & pct_hydro_reg$DomVeg_Lev1 %in% c("forest")] <- 0
+  pct_hydro_reg$Pct_Hydro_Score_reg[pct_hydro_reg$Pct_Hydro_reg == 0 & pct_hydro_reg$DomVeg_Lev1 %in% c("forest")] <- 0
+
+
+  pct_hydro1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
            ScientificName, OH_STATUS, SHADE, WET, tot_cov, rel_cov) |>
     filter(OH_STATUS == "native" & WET %in% c("FACW", "OBL", "(FACW)") & SHADE %in% c("partial", "shade")) |> #unique() |>
@@ -362,9 +429,14 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                       Pct_Hydro > 0.28 ~ 10,
                                       TRUE ~ NA_real_))
 
+  # Add 0s where no hydros were found in forest or shrub
+  pct_hydro <- left_join(herbs_lj, pct_hydro1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+  pct_hydro$Pct_Hydro[is.na(pct_hydro$Pct_Hydro) & pct_hydro$DomVeg_Lev1 %in% c("forest")] <- 0
+  pct_hydro$Pct_Hydro_Score[pct_hydro$Pct_Hydro == 0 & pct_hydro$DomVeg_Lev1 %in% c("forest")] <- 0
+
   # % sensitive - rel cover of COFC >=6, for DomVeg_Lev1 = shrub, buttonbush is not included as %sensitive
   # *if total cover(sum of cover values for all species observed in sample plot is <10%, all % metrics scored as 0)
-  pct_sens <- herbs |>
+  pct_sens1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
            ScientificName, COFC, tot_cov, rel_cov) |>
     filter(COFC >= 6) |>
@@ -389,9 +461,14 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                      DomVeg_Lev1 %in% c("forest") & Pct_Sens > 0.30 ~ 10,
                                      TRUE ~ NA_real_))
 
+  # Add 0s where no hydros were found in forest or shrub
+  pct_sens <- left_join(herbs_lj, pct_sens1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+  pct_sens$Pct_Sens[is.na(pct_sens$Pct_Sens) & pct_sens$DomVeg_Lev1 %in% c("forest")] <- 0
+  pct_sens$PctSens_Score[pct_sens$Pct_Sens == 0 & pct_sens$DomVeg_Lev1 %in% c("forest")] <- 0
+
   # % tolerant
   # *if total cover(sum of cover values for all species observed in sample plot is <10%, all % metrics scored as 0)
-  pct_tol <- herbs |>
+  pct_tol1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
            ScientificName, COFC, tot_cov, rel_cov) |>
     filter(COFC <= 2) |>
@@ -415,13 +492,23 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                     DomVeg_Lev1 %in% c("forest") & Pct_Tol < 0.05 ~ 10,
                                     TRUE ~ NA_real_))
 
+  # Add 0s where no hydros were found in forest or shrub
+  pct_tol <- left_join(herbs_lj, pct_tol1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+  pct_tol$Pct_Tol[is.na(pct_tol$Pct_Tol)] <- 0
+  pct_tol$PctTol_Score[pct_tol$Pct_Tol == 0] <- 0
+
+  #++++++ ENDED HERE+++++++
+  # need to update invgrass 0s. THen check that each metric is adding 0s for the correct community
+  # and that column names are spelled correctly
+  #++++++++++++++++++++++++
+
   # Invasive graminoids: Phalaris arundinaceae, Typha spp. Phragmites australis
   # *if total cover(sum of cover values for all species observed in sample plot is <10%, all % metrics scored as 0)
   inv_grams <- c("Phalaris arundinacea", "Phragmites australis ssp. australis",
                  "Typha angustifolia", "Typha latifolia", "Typha x glauca",
                  "Typha minima", "Typha sp.")
 
-  pct_invgram <- herbs |>
+  pct_invgram1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1, DomVeg_Lev2,
            ScientificName, tot_cov, rel_cov) |>
     filter(ScientificName %in% inv_grams) |> #unique() |>
@@ -440,6 +527,11 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                         Pct_InvGram >= 0.03 & Pct_InvGram < 0.15 ~ 7,
                                         Pct_InvGram < 0.03 ~ 10,
                                         TRUE ~ NA_real_))
+
+  # Add 0s where no hydros were found in forest or shrub
+  pct_hydro <- left_join(herbs_lj, pct_hydro1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+  pct_hydro$Pct_Hydro[is.na(pct_hydro$Pct_Hydro) & pct_hydro$DomVeg_Lev1 %in% c("forest")] <- 0
+  pct_hydro$Pct_Hydro_Score[pct_hydro$Pct_Hydro == 0 & pct_hydro$DomVeg_Lev1 %in% c("forest")] <- 0
 
   #---- Compile Woody and Big Tree metrics ----
   # For woody metrics to work, need to drop big tree records from tbl_VIBI_Woody and
@@ -613,11 +705,6 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   # It does not appear to be a metric collected by CUVA, so I won't include it. I'm guessing it's
   # because there are no mitigation wetlands with minimal plant establishment
 
-  # **** This metric should be calculated for wetland mitigation sites where perennial hydrophyte
-  # vegetation is not well established or where g/m2 of biomass is less than 100. It can also be
-  # used as a biomass metric substitute for mitigation wetlands or other emergent sites where
-  # biomass cannot be collected.
-
   #---- Compile Biomass Metrics ----
   # Assumes area sampled is always 0.01m2 to get grams/m2
   bmass1 <- getBiomass(years = years, survey_type = survey_type, hgm_class = hgm_class,
@@ -642,44 +729,49 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
 
   #---- Combine metrics for VIBI score and final rating ----
 
-  # Create table to left_join with vibi metrics
-  full_evs <- rbind(herbs |> select(LocationID, EventID, FeatureID, SampleDate, SampleYear, ModuleNo) |> unique(),
-                    woody |> select(LocationID, EventID, FeatureID, SampleDate, SampleYear, ModuleNo) |> unique(), #includes bigtree
-                    bmass |> select(LocationID, EventID, FeatureID, SampleDate, SampleYear, ModuleNo) |> unique()) |>
-    unique()
+  # Create table to left_join with vibi metrics; Dropped EventID and SampleDate because not identical withins sample period
+  herbs_recs <- herbs |> select(LocationID, FeatureID, DomVeg_Lev1, SampleYear, ModuleNo) |> mutate(herb = 1) |> unique()
+  woody_recs <- woody |> select(LocationID, FeatureID, DomVeg_Lev1, SampleYear, ModuleNo) |> mutate(woody = 1) |> unique()
+  bmass_recs <- bmass |> select(LocationID, FeatureID, DomVeg_Lev1, SampleYear, ModuleNo) |> mutate(bmass = 1) |> unique()
 
+  full_evs1 <- purrr::reduce(list(herbs_recs, woody_recs, bmass_recs), full_join,
+                            by = c("LocationID", "FeatureID", "DomVeg_Lev1", "SampleYear", "ModuleNo"))
+
+  full_evs1$num_samps <- rowSums(full_evs1[,c("herb", "woody", "bmass")], na.rm = T)
+
+  # Drop records that only have biomass sampled
+  full_evs <- full_evs1 |> filter(!(bmass == 1 & num_samps == 1)) |> select(-herb, -woody, -bmass, -num_samps)
+
+  # Removed EventID, SampleDate, from list, because not identical across herb, woody, biomass data
   vibi_list <- list(
-    carex |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, Num_Carex, Carex_Score),
-    cyper |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, Num_Cyper, Cyper_Score),
-    dicot |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, Num_Dicot, Dicot_Score),
-    shade |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, Num_Shade, Shade_Score),
-    shrub_reg |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, Num_Shrub_reg, Shrub_Score_reg),
-    shrub |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, Num_Shrub, Shrub_Score),
-    hydrop_reg |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, Num_Hydro_reg, Hydro_Score_reg),
-    hydrop |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, Num_Hydro, Hydro_Score),
-    ap_ratio |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, AP_Ratio, AP_Score),
-    svp |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, Num_SVP, SVP_Score),
-    FQAI |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, NumSpp, FQAI, FQAI_Score, FQAI_Score_FQ),
-    CovWt_CofC |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, tot_cov, cov_wt_C, Cov_Wt_C_Score, Cov_Wt_C_Score_FQ),
-    pct_bryo |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, Pct_Bryo, PctBryo_Score),
-    pct_hydro_reg |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, Pct_Hydro_reg, PctHydro_Score_reg),
-    pct_hydro |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, Pct_Hydro, PctHydro_Score),
-    pct_sens |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, Pct_Sens, PctSens_Score),
-    pct_tol |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, Pct_Tol, PctTol_Score),
-    pct_invgram |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, Pct_InvGram, PctInvGram_Score),
-    pole |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, RelDen_SmTree, SmTree_Score),
-    subcan_IV |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, SubcanIV, SubcanIV_Score),
-    canopy_IV |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, CanopyIV, CanopyIV_Score),
-    bmass |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, Avg_Bmass, Biomass_Score)
+    carex |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Carex, Carex_Score),
+    cyper |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Cyper, Cyper_Score),
+    dicot |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Dicot, Dicot_Score),
+    shade |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Shade, Shade_Score),
+    shrub_reg |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Shrub_reg, Shrub_Score_reg),
+    shrub |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Shrub, Shrub_Score),
+    hydrop_reg |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Hydro_reg, Hydro_Score_reg),
+    hydrop |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Hydro, Hydro_Score),
+    ap_ratio |> select(LocationID, FeatureID, SampleYear, ModuleNo, AP_Ratio, AP_Score),
+    svp |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_SVP, SVP_Score),
+    FQAI |> select(LocationID, FeatureID, SampleYear, ModuleNo, NumSpp, FQAI, FQAI_Score, FQAI_Score_FQ),
+    CovWt_CofC |> select(LocationID, FeatureID, SampleYear, ModuleNo, tot_cov, cov_wt_C, Cov_Wt_C_Score, Cov_Wt_C_Score_FQ),
+    pct_bryo |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Bryo, PctBryo_Score),
+    pct_hydro_reg |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Hydro_reg, PctHydro_Score_reg),
+    pct_hydro |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Hydro, PctHydro_Score),
+    pct_sens |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Sens, PctSens_Score),
+    pct_tol |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Tol, PctTol_Score),
+    pct_invgram |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_InvGram, PctInvGram_Score),
+    pole |> select(LocationID, FeatureID, SampleYear, ModuleNo, RelDen_SmTree, SmTree_Score),
+    subcan_IV |> select(LocationID, FeatureID, SampleYear, ModuleNo, SubcanIV, SubcanIV_Score),
+    canopy_IV |> select(LocationID, FeatureID, SampleYear, ModuleNo, CanopyIV, CanopyIV_Score),
+    bmass |> select(LocationID, FeatureID, SampleYear, ModuleNo, Avg_Bmass, Biomass_Score)
   )
 
-  head(full_evs)
   vibi_comb <- purrr::reduce(vibi_list, left_join,
-                       by = c("LocationID", "EventID", "FeatureID", "SampleDate", "SampleYear", "ModuleNo"))
+                       by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo")) |> data.frame()
 
-
-
-  vibi_comb2 <- left_join(full_evs, vibi_comb, by = c("LocationID", "EventID", "FeatureID", "SampleDate", "SampleYear", "ModuleNo"))
+  vibi_comb2 <- left_join(full_evs, vibi_comb, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
 
   #names(vibi_comb2)[grepl("Score", names(vibi_comb2))]
 
@@ -697,10 +789,14 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
 
   vibi_fq_cols <- c("FQAI_Score_FQ", "Cov_Wt_C_Score_FQ")
 
-  final_dat <- left_join(plots_abbr, vibi_comb2, by = c("LocationID", "FeatureID"))
+  final_dat <- left_join(plots_abbr, vibi_comb2, by = c("LocationID", "FeatureID", "DomVeg_Lev1"))
+
+
   final_dat$VIBI_Score_ACOEReg <- rowSums(final_dat[,score_reg_cols], na.rm = T)
   final_dat$VIBI_Score_State <- rowSums(final_dat[,score_state_cols], na.rm = T)
   final_dat$VIBI_Score_FQ <- rowSums(final_dat[,vibi_fq_cols], na.rm = T)
+
+  final_dat <- final_dat |> arrange(FeatureID, SampleYear, ModuleNo)
 
   return(final_dat)
   }

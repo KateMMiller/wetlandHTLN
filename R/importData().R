@@ -254,8 +254,8 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   btrees_final <- btrees2[,c(loc_cols, spp_cols, "ModuleNo", "DBH", "EventID")]
 
   # remove all but final tables from HTLNwetlands env.
-  #names(HTLNwetlands)
-  #rm(list = ls(envir = env), envir = env)
+  names(HTLNwetlands)
+  rm(list = ls(envir = env), envir = env)
 
   assign("locations", loc, envir = env)
   assign("biomassVIBI", bmass_final, envir = env)
