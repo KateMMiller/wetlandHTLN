@@ -96,6 +96,7 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   if(data_type %in% c("vibi", "all")){
   tbls <- c("tbl_BigTrees",
             "tbl_Locations",
+            #"tbl_SamplingEvents",
             "tbl_SiteWPs",
             "tbl_VIBI_Herb",
             "tbl_VIBI_Herb_Biomass",
@@ -103,11 +104,11 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
             "tlu_DomVeg",
             "tlu_HGMClass",
             "tlu_CoverClass",
-            "tlu_WetlndSpeciesList_2025_update", #"tlu_WetlndSpeciesList"
+            "tlu_WetlndSpeciesList", #"tlu_WetlndSpeciesList"
             "tlu_WoodyPlants")
 
   tbl_names <- gsub("tbl_", "", tbls)
-  tbl_names[tbl_names == "tlu_WetlndSpeciesList_2025_update"] <- "tlu_WetlndSpeciesList" # delete after tlu updated
+  #tbl_names[tbl_names == "tlu_WetlndSpeciesList_2025_update"] <- "tlu_WetlndSpeciesList" # delete after tlu updated
 
   # Checks on database import to return meaningful errors on fail
   # make sure db is on dsn list if type == DSN
