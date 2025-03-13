@@ -1,6 +1,6 @@
 #' @title joinVIBI: join module-level VIBI metrics
 #'
-#' @importFrom dplyr arrange between case_when filter first group_by left_join mutate select summarize
+#' @importFrom dplyr arrange between case_when filter first full_join group_by left_join mutate select summarize
 #' @importFrom tidyr pivot_wider
 #' @importFrom tidyselect starts_with
 #' @importFrom purrr reduce
@@ -251,8 +251,8 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
 
   # Add 0s where no hydrophytes were found in emergent or shrub wetlands
   hydrop_reg <- left_join(herbs_lj, hydrop_reg1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo", "DomVeg_Lev1"))
-  hydrop_reg$Num_Hydro[is.na(hydrop_reg$Num_Hydro) & hydrop_reg$DomVeg_Lev1 %in% c("emergent", "shrub")] <- 0
-  hydrop_reg$Hydro_Score[hydrop_reg$Num_Hydro == 0 & hydrop_reg$DomVeg_Lev1 %in% c("emergent", "shrub")] <- 0
+  hydrop_reg$Num_Hydro_reg[is.na(hydrop_reg$Num_Hydro_reg) & hydrop_reg$DomVeg_Lev1 %in% c("emergent", "shrub")] <- 0
+  hydrop_reg$Hydro_Score_reg[hydrop_reg$Num_Hydro_reg == 0 & hydrop_reg$DomVeg_Lev1 %in% c("emergent", "shrub")] <- 0
 
   # hydro - statewide
   hydrop1 <- herbs |>
@@ -293,7 +293,7 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
            AP_Score = case_when(is.na(AP_Ratio) ~ NA_real_,
                                 AP_Ratio > 0.48 ~ 0,
                                 between(AP_Ratio, 0.32, 0.48) ~ 3,
-                                between(AP_Ratio, 0.20, 0.30) ~ 7,
+                                between(AP_Ratio, 0.20, 0.32) ~ 7,
                                 AP_Ratio <= 0.20 ~ 10,
                                 TRUE ~ NA_real_
                                 ))
@@ -355,10 +355,10 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
     mutate(cov_wt_C = rel_cov * COFC) |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1, tot_cov) |>
     summarize(cov_wt_C = sum(cov_wt_C, na.rm = T), .groups = 'drop') |>
-    mutate(Cov_Wt_C_Score = case_when(is.na(cov_wt_C) ~ NA_real_,
-                                      cov_wt_C == 0 ~ 0,
-                                      cov_wt_C > 0 & cov_wt_C <= 6 ~ 3,
-                                      cov_wt_C > 6 ~ 10),
+    mutate(#Cov_Wt_C_Score = case_when(is.na(cov_wt_C) ~ NA_real_, # I don't think this is actually scored outside of FQ
+           #                          cov_wt_C == 0 ~ 0,
+           #                          cov_wt_C > 0 & cov_wt_C <= 6 ~ 3,
+           #                          cov_wt_C > 6 ~ 10),
            Cov_Wt_C_Score_FQ = case_when(tot_cov < 0.75 & DomVeg_Lev1 == "forest" ~
                                             (((tot_cov/0.75) * cov_wt_C)/6) * 50, #from spreadsheet
                                          is.na(cov_wt_C) ~ NA_real_,
@@ -409,7 +409,7 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   # Add 0s where no hydros were found in forest or shrub
   pct_hydro_reg <- left_join(herbs_lj, pct_hydro_reg1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo", "DomVeg_Lev1"))
   pct_hydro_reg$Pct_Hydro_reg[is.na(pct_hydro_reg$Pct_Hydro_reg) & pct_hydro_reg$DomVeg_Lev1 %in% c("forest")] <- 0
-  pct_hydro_reg$Pct_Hydro_Score_reg[pct_hydro_reg$Pct_Hydro_reg == 0 & pct_hydro_reg$DomVeg_Lev1 %in% c("forest")] <- 0
+  pct_hydro_reg$PctHydro_Score_reg[pct_hydro_reg$Pct_Hydro_reg == 0 & pct_hydro_reg$DomVeg_Lev1 %in% c("forest")] <- 0
 
 
   pct_hydro1 <- herbs |>
@@ -430,7 +430,7 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   # Add 0s where no hydros were found in forest or shrub
   pct_hydro <- left_join(herbs_lj, pct_hydro1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo", "DomVeg_Lev1"))
   pct_hydro$Pct_Hydro[is.na(pct_hydro$Pct_Hydro) & pct_hydro$DomVeg_Lev1 %in% c("forest")] <- 0
-  pct_hydro$Pct_Hydro_Score[pct_hydro$Pct_Hydro == 0 & pct_hydro$DomVeg_Lev1 %in% c("forest")] <- 0
+  pct_hydro$PctHydro_Score[pct_hydro$Pct_Hydro == 0 & pct_hydro$DomVeg_Lev1 %in% c("forest")] <- 0
 
   # % sensitive - rel cover of COFC >=6, for DomVeg_Lev1 = shrub, buttonbush is not included as %sensitive
   # *if total cover(sum of cover values for all species observed in sample plot is <10%, all % metrics scored as 0)
@@ -479,15 +479,15 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                     DomVeg_Lev1 %in% c("emergent") & Pct_Tol >= 0.20 & Pct_Tol < 0.40 ~ 7,
                                     DomVeg_Lev1 %in% c("emergent") & Pct_Tol < 0.20 ~ 10,
 
-                                    DomVeg_Lev1 %in% c("shrub") & Pct_Tol >= 0.45 ~ 0,
-                                    DomVeg_Lev1 %in% c("shrub") & Pct_Tol >= 0.30  & Pct_Tol < 0.45 ~ 3,
-                                    DomVeg_Lev1 %in% c("shrub") & Pct_Tol >= 0.15 & Pct_Tol < 0.30 ~ 7,
-                                    DomVeg_Lev1 %in% c("shrub") & Pct_Tol < 0.15 ~ 10,
+                                    DomVeg_Lev1 %in% c("forest") & Pct_Tol >= 0.45 ~ 0,
+                                    DomVeg_Lev1 %in% c("forest") & Pct_Tol >= 0.30  & Pct_Tol < 0.45 ~ 3,
+                                    DomVeg_Lev1 %in% c("forest") & Pct_Tol >= 0.15 & Pct_Tol < 0.30 ~ 7,
+                                    DomVeg_Lev1 %in% c("forest") & Pct_Tol < 0.15 ~ 10,
 
-                                    DomVeg_Lev1 %in% c("forest") & Pct_Tol >= 0.15 ~ 0,
-                                    DomVeg_Lev1 %in% c("forest") & Pct_Tol >= 0.10  & Pct_Tol < 0.15 ~ 3,
-                                    DomVeg_Lev1 %in% c("forest") & Pct_Tol >= 0.05 & Pct_Tol < 0.10 ~ 7,
-                                    DomVeg_Lev1 %in% c("forest") & Pct_Tol < 0.05 ~ 10,
+                                    DomVeg_Lev1 %in% c("shrub") & Pct_Tol >= 0.15 ~ 0,
+                                    DomVeg_Lev1 %in% c("shrub") & Pct_Tol >= 0.10  & Pct_Tol < 0.15 ~ 3,
+                                    DomVeg_Lev1 %in% c("shrub") & Pct_Tol >= 0.05 & Pct_Tol < 0.10 ~ 7,
+                                    DomVeg_Lev1 %in% c("shrub") & Pct_Tol < 0.05 ~ 10,
                                     TRUE ~ NA_real_))
 
   # Add 0s where no hydros were found in forest or shrub
@@ -511,7 +511,7 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
     # EPA manual states that this metric replaces the subcanopy IV metric for this community.
     # Based on the VIBI spreadsheet and the HTLN database, Bog Shrub Swamp seems to cover
     # that, although there's not a site like this in the data.
-    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1, tot_cov) |>
+    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1, DomVeg_Lev2, tot_cov) |>
     summarize(Pct_InvGram = sum(rel_cov, na.rm = T), .groups = 'drop') |>
     mutate(PctInvGram_Score = case_when(is.na(Pct_InvGram) ~ NA_real_,
                                         tot_cov < 10 ~ 0, # first case
@@ -524,7 +524,12 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   # Add 0s where no invgrams were found in forest or shrub
   pct_invgram <- left_join(herbs_lj, pct_invgram1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo", "DomVeg_Lev1"))
   pct_invgram$Pct_InvGram[is.na(pct_invgram$Pct_InvGram) & pct_invgram$DomVeg_Lev1 %in% c("emergent")] <- 0
-  pct_invgram$Pct_InvGram_Score[pct_invgram$Pct_InvGram == 0 & pct_invgram$DomVeg_Lev1 %in% c("emergent")] <- 0
+  pct_invgram$PctInvGram_Score[pct_invgram$Pct_InvGram == 0 & pct_invgram$DomVeg_Lev1 %in% c("emergent")] <- 0
+
+  pct_invgram$Pct_InvGram[is.na(pct_invgram$Pct_InvGram) &
+                            (pct_invgram$DomVeg_Lev1 %in% c("shrub") & pct_invgram$DomVeg_Lev2 == "Bog Shrub Swamp")] <- 0
+  pct_invgram$PctInvGram_Score[pct_invgram$Pct_InvGram == 0 &
+                                 (pct_invgram$DomVeg_Lev1 %in% c("shrub") & pct_invgram$DomVeg_Lev2 == "Bog Shrub Swamp")] <- 0
 
   #---- Compile Woody and Big Tree metrics ----
   # For woody metrics to work, need to drop big tree records from tbl_VIBI_Woody and
@@ -612,7 +617,7 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   # Add 0s where no pole trees were found in forest
   pole <- left_join(woody_lj, pole1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo", "DomVeg_Lev1"))
   pole$RelDen_SmTree[is.na(pole$RelDen_SmTree) & pole$DomVeg_Lev1 == "forest"] <- 0
-  pole$SmTree_Score[is.na(pole$RelDen_SmTree) & pole$DomVeg_Lev1 == "forest"] <- 0
+  pole$SmTree_Score[pole$RelDen_SmTree == 0 & pole$DomVeg_Lev1 == "forest"] <- 0
 
   # Canopy and Subcanopy IV
   # Had to rbind all woody <40cm to Big Trees records to get correct DBH and BA for IV
@@ -684,8 +689,8 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
 
   # Add 0s where no subcanopy trees were found in forest
   subcan_IV <- left_join(woody_lj, subcan_IV1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo", "DomVeg_Lev1"))
-  subcan_IV$SubcanIV[is.na(subcan_IV$SubcanIV) & subcan_IV$DomVeg_Lev1 == "forest"] <- 0
-  subcan_IV$SubcanIV_Score[subcan_IV$SubcanIV == 0 & subcan_IV$DomVeg_Lev1 == "forest"] <- 0
+  subcan_IV$SubcanIV[is.na(subcan_IV$SubcanIV) & subcan_IV$DomVeg_Lev1 %in% c("shrub", "forest")] <- 0
+  subcan_IV$SubcanIV_Score[subcan_IV$SubcanIV == 0 & subcan_IV$DomVeg_Lev1 %in% c("shrub", "forest")] <- 0
 
 
   canopy_IV1 <- IV |>
@@ -734,7 +739,7 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                      .groups = 'drop') |>
            mutate(Biomass_Score = case_when(is.na(Avg_Bmass) ~ NA_real_,
                                             Avg_Bmass > 800 ~ 0,
-                                            Avg_Bmass >= 451 & Avg_Bmass <= 801 ~ 3,
+                                            Avg_Bmass >= 451 & Avg_Bmass <= 800 ~ 3,
                                             Avg_Bmass >= 201 & Avg_Bmass < 451 ~ 7,
                                             Avg_Bmass >= 100 & Avg_Bmass < 201 ~ 10,
                                             Avg_Bmass < 100 ~ 0,
@@ -742,6 +747,7 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                                             ))
 
   # Not adding 0s for Biomass, because not every module is sampled for biomass every year.
+  # I don't have a way to logically changes 0s to NA
 
   #---- Combine metrics for VIBI score and final rating ----
 
@@ -814,9 +820,9 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
 
   final_dat <- final_dat |> arrange(FeatureID, SampleYear, ModuleNo)
 
-  write.csv(final_dat |> select(-Park, -County, -PlotConfig, -AreaHA, -(X1oPlants:HGMClass),
-                                -(DomVeg_Lev2:DomVeg_Lev3)),
-            "./testing_scripts/vibi_check2.csv", row.names = F)
+  # write.csv(final_dat |> select(-Park, -County, -PlotConfig, -AreaHA, -(X1oPlants:HGMClass),
+  #                               -(DomVeg_Lev2:DomVeg_Lev3)),
+  #           "./testing_scripts/vibi_check3.csv", row.names = F)
 
   return(final_dat)
   }
