@@ -11,11 +11,14 @@
 #' @param hgm_class Filter on HGM class. Options are "all" (default), "Depression",
 #' "Impoundment", "Riverine", "Slope". Can choose multiple options.
 #'
-#' @param dom_veg1 Filter on level 1 dominant vegetation type. Options are "all" (default), "Emergent",
-#' "Forest", "Shrub". Can choose multiple options.
+#' @param dom_veg1 Filter on level 1 dominant vegetation type. Options are "all" (default), "emergent",
+#' "forest", "shrub". Can choose multiple options.
 #'
 #' @param plotID Quoted string. Default is 'all'. If specified will return data for only plots specified.
 #' Can choose multiple plots. Based on FeatureID in database.
+#'
+#' @param intens_mods Filter on total number of intensive modules. Ranges from 1 to 4. Can select multiple.
+#' Default is 1:4 (all).
 #'
 #' @examples
 #' \dontrun{
@@ -35,10 +38,10 @@
 #' depr <- getPlots(hgm_class = "Depression")
 #'
 #' # return only forested vegetation types
-#' forest <- getPlots(dom_veg1 = "Forest")
+#' forest <- getPlots(dom_veg1 = "forest")
 #'
 #' # return non-forested vegetation types
-#' nonfor <- getPlots(dom_veg1 = c("Shrub", "Emergent"))
+#' nonfor <- getPlots(dom_veg1 = c("shrub", "emergent"))
 #'
 #' # return plots for subset of plots
 #' plots <- getPlots(plotID = c("1007", "1017", "1043"))
@@ -48,7 +51,7 @@
 #' @export
 
 getPlots <- function(plot_type = "VIBIplotID", survey_type = 'all', hgm_class = 'all', dom_veg1 = 'all',
-                     plotID = 'all'){
+                     plotID = 'all', intens_mods = 1:4){
 
   #---- Bug handling ----
   plot_type <- match.arg(plot_type, several.ok = T,
@@ -57,7 +60,9 @@ getPlots <- function(plot_type = "VIBIplotID", survey_type = 'all', hgm_class = 
                            choices = c("all", "reference", "survey", "survey, womc", "womc", "womc, reference"))
   hgm_class <- match.arg(hgm_class, choices = c("all", "Depression", "Impoundment", "Riverine", "Slope"),
                          several.ok = T)
-  dom_veg1 <- match.arg(dom_veg1, choices = c("all", "Emergent", "Forest", "Shrub"), several.ok = T)
+  dom_veg1 <- match.arg(dom_veg1, choices = c("all", "emergent", "forest", "shrub"), several.ok = T)
+
+  stopifnot(class(intens_mods) == "numeric" | class(intens_mods) == "integer")
 
   #---- Compile data ----
   env <- if(exists("HTLNwetlands")){HTLNwetlands} else {.GlobalEnv}
@@ -80,6 +85,8 @@ getPlots <- function(plot_type = "VIBIplotID", survey_type = 'all', hgm_class = 
   plot5 <- if(any(plotID == 'all')){plot4
   } else {plot4[plot4$FeatureID %in% plotID,]}
 
-  return(plot5)
+  plot6 <- plot5[plot5$InternMods == intens_mods,]
+
+  return(plot6)
 }
 

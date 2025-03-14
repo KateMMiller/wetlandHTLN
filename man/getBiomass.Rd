@@ -9,7 +9,8 @@ getBiomass(
   survey_type = "all",
   hgm_class = "all",
   dom_veg1 = "all",
-  plotID = "all"
+  plotID = "all",
+  intens_mods = 1:4
 )
 }
 \arguments{
@@ -21,11 +22,14 @@ getBiomass(
 \item{hgm_class}{Filter on HGM class. Options are "all" (default), "Depression",
 "Impoundment", "Riverine", "Slope". Can choose multiple options.}
 
-\item{dom_veg1}{Filter on level 1 dominant vegetation type. Options are "all" (default), "Emergent",
-"Forest", "Shrub". Can choose multiple options.}
+\item{dom_veg1}{Filter on level 1 dominant vegetation type. Options are "all" (default), "emergent",
+"forest", "shrub". Can choose multiple options.}
 
 \item{plotID}{Quoted string. Default is 'all'. If specified will return data for only plots specified.
 Can choose multiple plots. Based on FeatureID in database.}
+
+\item{intens_mods}{Filter on total number of intensive modules. Ranges from 1 to 4. Can select multiple.
+Default is 1:4 (all).}
 }
 \value{
 Returns a data frame of biomass count data
@@ -57,10 +61,10 @@ womc <- getBiomass(survey_type = c("womc", "womc, reference", "survey, womc"))
 depr <- getBiomass(hgm_class = "Depression")
 
 return only forested vegetation types
-forest <- getBiomass(dom_veg1 = "Forest")
+forest <- getBiomass(dom_veg1 = "forest")
 
 # return non-forested vegetation types
-nonfor <- getBiomass(dom_veg1 = c("Shrub", "Emergent"))
+nonfor <- getBiomass(dom_veg1 = c("shrub", "emergent"))
 
 # return biomass for subset of plots
 biomass_plots <- getBiomass(plotID = c("1007", "1017", "1043"))

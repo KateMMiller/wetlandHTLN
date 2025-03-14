@@ -10,7 +10,8 @@ getHerbs(
   hgm_class = "all",
   dom_veg1 = "all",
   plotID = "all",
-  nativity = "all"
+  nativity = "all",
+  intens_mods = 1:4
 )
 }
 \arguments{
@@ -22,14 +23,17 @@ getHerbs(
 \item{hgm_class}{Filter on HGM class. Options are "all" (default), "Depression",
 "Impoundment", "Riverine", "Slope". Can choose multiple options.}
 
-\item{dom_veg1}{Filter on level 1 dominant vegetation type. Options are "all" (default), "Emergent",
-"Forest", "Shrub". Can choose multiple options.}
+\item{dom_veg1}{Filter on level 1 dominant vegetation type. Options are "all" (default), "emergent",
+"forest", "shrub". Can choose multiple options.}
 
 \item{plotID}{Quoted string. Default is 'all'. If specified will return data for only plots specified.
 Can choose multiple plots. Based on FeatureID in database.}
 
 \item{nativity}{Quoted string. Filter on native status. Options are "all" (default), "adventive",
 "cryptogeni", or "native". Can choose multiple statuses.}
+
+\item{intens_mods}{Filter on total number of intensive modules. Ranges from 1 to 4. Can select multiple.
+Default is 1:4 (all).}
 }
 \value{
 Returns a data frame of herb cover data
@@ -61,10 +65,10 @@ womc <- getHerbs(survey_type = c("womc", "womc, reference", "survey, womc"))
 depr <- getHerbs(hgm_class = "Depression")
 
 # return only forested vegetation types
-forest <- getHerbs(dom_veg1 = "Forest")
+forest <- getHerbs(dom_veg1 = "forest")
 
 # return non-forested vegetation types
-nonfor <- getHerbs(dom_veg1 = c("Shrub", "Emergent"))
+nonfor <- getHerbs(dom_veg1 = c("shrub", "emergent"))
 
 # return native species only
 nat <- getHerbs(nativity = "native")

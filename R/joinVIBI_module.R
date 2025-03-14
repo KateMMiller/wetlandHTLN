@@ -1,16 +1,22 @@
-#' @title joinVIBI: join module-level VIBI metrics
+#' @title joinVIBI_module: join module-level VIBI metrics
 #'
 #' @importFrom dplyr arrange between case_when filter first full_join group_by left_join mutate select summarize
 #' @importFrom tidyr pivot_wider
 #' @importFrom tidyselect starts_with
 #' @importFrom purrr reduce
 #'
-#' @description This function summarizes module-level VIBI and filters by plot, year, and plot types. Note
-#' that the Biomass metric assumes the aera sampled is always 0.01m2. Metric calculations and thresholds
-#' follow INTEGRATED WETLAND ASSESSMENT PROGRAM Part 9: Field Manual for the Vegetation Index of
-#' Biotic Integrity for Wetlands v. 1.5. Pages 17 - 20 and Table 2 were most useful. For plot-level average
-#' VIBI scores, use sumVIBI. Currently, if there's only a biomass record for a given year, those records are
-#' dropped.
+#' @description This function summarizes module-level VIBI and filters by plot, year, and plot types. This
+#' function will return a VIBI score for each module within a site, and allows for more equal comparisons
+#' among sites with fewer than 4 modules. Averaging the module scores within a site is also possible via sumVIBI.
+#'
+#' NOTE 1: Because the results from sumVIBI are averages rather than sums (ie the VIBI spreadsheet), their
+#' scores will be lower than other datasets that use the VIBI spreadsheet, which are straight sums.
+#'
+#' NOTE 2: The Biomass metric assumes the area sampled is always 0.01m2. Currently, if there's only a biomass
+#' record for a given year and no herb or woody data, those records are dropped.
+#'
+#' NOTE 3: Metric calculations and thresholds follow INTEGRATED WETLAND ASSESSMENT PROGRAM Part 9: Field Manual
+#' for the Vegetation Index of Biotic Integrity for Wetlands v. 1.5. Pages 17 - 20 and Table 2 were most useful.
 #'
 #' @param years Numeric. Filter on years of survey. Default is all.
 #'
@@ -20,20 +26,36 @@
 #' @param hgm_class Filter on HGM class. Options are "all" (default), "Depression",
 #' "Impoundment", "Riverine", "Slope". Can choose multiple options.
 #'
-#' @param dom_veg1 Filter on level 1 dominant vegetation type. Options are "all" (default), "Emergent",
-#' "Forest", "Shrub". Can choose multiple options.
+#' @param dom_veg1 Filter on level 1 dominant vegetation type. Options are "all" (default), "emergent",
+#' "forest", "shrub". Can choose multiple options. Note that emergent-coastal was not included as an option
+#' in this VIBI, but wouldn't take much to add as an option.
 #'
 #' @param plotID Quoted string. Default is 'all'. If specified will return data for only plots specified.
 #' Can choose multiple plots. Based on FeatureID in database.
 #'
 #' @param region Quoted string. Default is "NCNE". Specifies the Army Corps Region for OH. Options are "EMP", "MW", and "NCNE".
 #'
+#' @param intens_mods Filter on total number of intensive modules. Ranges from 1 to 4. Can select multiple.
+#' Default is 1:4 (all).
+#'
 #' @examples
 #' \dontrun{
 #' # run first
 #' importData()
 #'
-#'  # ADD EXAMPLES
+#' # calculate module-level VIBI for all sites (default).
+#' vibi <- joinVIBI_module()
+#'
+#' # calculate module-level VIBI for all sites sampled in 2023
+#' vibi23 <- joinVIBI_module(years = 2023)
+#'
+#' # calculate module-level VIBI for all emergent wetlands
+#' vibi_emerg <- joinVIBI_module(dom_veg1 = "emergent")
+#'
+#' # calculate module-level VIBI for depressional wetlands
+#'
+#' vibi_dep <- joinVIBI_module(hgm_class = "Depression")
+#'
 #'
 #' }
 #'
@@ -41,25 +63,25 @@
 #' @export
 #'
 
-joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
+joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                     survey_type = 'all', hgm_class = 'all', dom_veg1 = 'all',
-                    plotID = 'all', region = "NCNE"){
+                    plotID = 'all', region = "NCNE", intens_mods = 1:4){
 
   #---- Bug handling ----
   survey_type <- match.arg(survey_type, several.ok = T,
                            choices = c("all", "reference", "survey", "survey, womc", "womc", "womc, reference"))
   hgm_class <- match.arg(hgm_class, choices = c("all", "Depression", "Impoundment", "Riverine", "Slope"),
                          several.ok = T)
-  dom_veg1 <- match.arg(dom_veg1, choices = c("all", "Emergent", "Forest", "Shrub"), several.ok = T)
+  dom_veg1 <- match.arg(dom_veg1, choices = c("all", "emergent", "forest", "shrub"), several.ok = T)
   region <- match.arg(region, choices = c("NCNE", "EMP", "MW"))
   stopifnot(class(years) == "numeric" | class(years) == "integer", years >= 2008)
-
+  stopifnot(class(intens_mods) == "numeric" | class(intens_mods) == "integer")
 
   #---- Compile Plot and visit-level data ----
   env <- if(exists("HTLNwetlands")){HTLNwetlands} else {.GlobalEnv}
 
   plots <- getPlots(plot_type = "VIBIplotID", survey_type = survey_type, hgm_class = hgm_class,
-                    dom_veg1 = dom_veg1, plotID = plotID)
+                    dom_veg1 = dom_veg1, plotID = plotID, intens_mods = intens_mods)
 
   tryCatch(tluSpp <- get("tluSpp", envir = env),
            error = function(e){stop("tlu_WetlndSpeciesList not found. Please run importData() first.")})
@@ -328,7 +350,7 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   FQAI <- herbs |>
     filter(!is.na(COFC)) |> # drop species without Coefs
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
-           ScientificName, COFC) |>
+           ScientificName, COFC) |> unique() |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1) |>
     summarize(CC = sum(COFC),
               NumSpp = sum(!is.na(ScientificName)),
@@ -767,7 +789,7 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   # Removed EventID, SampleDate, from list, because not identical across herb, woody, biomass data
   vibi_list <- list(
     carex |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Carex, Carex_Score),
-    cyper |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Cyper, Cyper_Score),
+    #cyper |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Cyper, Cyper_Score),
     dicot |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Dicot, Dicot_Score),
     shade |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Shade, Shade_Score),
     shrub_reg |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Shrub_reg, Shrub_Score_reg),
@@ -777,7 +799,7 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
     ap_ratio |> select(LocationID, FeatureID, SampleYear, ModuleNo, AP_Ratio, AP_Score),
     svp |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_SVP, SVP_Score),
     FQAI |> select(LocationID, FeatureID, SampleYear, ModuleNo, NumSpp, FQAI, FQAI_Score, FQAI_Score_FQ),
-    CovWt_CofC |> select(LocationID, FeatureID, SampleYear, ModuleNo, tot_cov, cov_wt_C, Cov_Wt_C_Score, Cov_Wt_C_Score_FQ),
+    CovWt_CofC |> select(LocationID, FeatureID, SampleYear, ModuleNo, tot_cov, cov_wt_C, Cov_Wt_C_Score_FQ),
     pct_bryo |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Bryo, PctBryo_Score),
     pct_hydro_reg |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Hydro_reg, PctHydro_Score_reg),
     pct_hydro |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Hydro, PctHydro_Score),
@@ -797,15 +819,15 @@ joinVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
 
   #names(vibi_comb2)[grepl("Score", names(vibi_comb2))]
 
-  score_reg_cols <- c("Carex_Score", "Cyper_Score", "Dicot_Score", "Shade_Score",
-                     "Shrub_Score_reg", "Hydro_Score_reg", "SVP_Score", "AP_Score",
-                     "FQAI_Score", "Cov_Wt_C_Score",
+  score_reg_cols <- c("Carex_Score", #"Cyper_Score",
+                      "Dicot_Score", "Shade_Score",
+                     "Shrub_Score_reg", "Hydro_Score_reg", "SVP_Score", "AP_Score", "FQAI_Score",
                      "PctBryo_Score", "PctHydro_Score_reg", "PctSens_Score", "PctTol_Score", "PctInvGram_Score",
                      "SmTree_Score", "SubcanIV_Score", "CanopyIV_Score", "Biomass_Score")
 
-  score_state_cols <- c("Carex_Score", "Cyper_Score", "Dicot_Score", "Shade_Score",
-                        "Shrub_Score", "Hydro_Score", "SVP_Score", "AP_Score",
-                        "FQAI_Score", "Cov_Wt_C_Score",
+  score_state_cols <- c("Carex_Score", #"Cyper_Score",
+                        "Dicot_Score", "Shade_Score",
+                        "Shrub_Score", "Hydro_Score", "SVP_Score", "AP_Score", "FQAI_Score",
                         "PctBryo_Score", "PctHydro_Score", "PctSens_Score", "PctTol_Score", "PctInvGram_Score",
                         "SmTree_Score", "SubcanIV_Score", "CanopyIV_Score", "Biomass_Score")
 

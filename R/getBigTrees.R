@@ -12,14 +12,17 @@
 #' @param hgm_class Filter on HGM class. Options are "all" (default), "Depression",
 #' "Impoundment", "Riverine", "Slope". Can choose multiple options.
 #'
-#' @param dom_veg1 Filter on level 1 dominant vegetation type. Options are "all" (default), "Emergent",
-#' "Forest", "Shrub". Can choose multiple options.
+#' @param dom_veg1 Filter on level 1 dominant vegetation type. Options are "all" (default), "emergent",
+#' "forest", "shrub". Can choose multiple options.
 #'
 #' @param plotID Quoted string. Default is 'all'. If specified will return data for only plots specified.
 #' Can choose multiple plots. Based on FeatureID in database.
 #'
 #' @param nativity Quoted string. Filter on native status. Options are "all" (default), "adventive",
 #' "cryptogeni", or "native". Can choose multiple statuses.
+#'
+#' @param intens_mods Filter on total number of intensive modules. Ranges from 1 to 4. Can select multiple.
+#' Default is 1:4 (all).
 #'
 #' @examples
 #' \dontrun{
@@ -45,10 +48,10 @@
 #' depr <- getBigTrees(hgm_class = "Depression")
 #'
 #' # return only forested vegetation types
-#' forest <- getBigTrees(dom_veg1 = "Forest")
+#' forest <- getBigTrees(dom_veg1 = "forest")
 #'
 #' # return non-forested vegetation types
-#' nonfor <- getBigTrees(dom_veg1 = c("Shrub", "Emergent"))
+#' nonfor <- getBigTrees(dom_veg1 = c("shrub", "emergent"))
 #'
 #' # return native species only
 #' nat <- getBigTrees(nativity = "native")
@@ -63,16 +66,17 @@
 
 getBigTrees <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
                      survey_type = 'all', hgm_class = 'all', dom_veg1 = 'all',
-                     plotID = 'all', nativity = 'all'){
+                     plotID = 'all', nativity = 'all', intens_mods = 1:4){
 
   #---- Bug handling ----
   survey_type <- match.arg(survey_type, several.ok = T,
                            choices = c("all", "reference", "survey", "survey, womc", "womc", "womc, reference"))
   hgm_class <- match.arg(hgm_class, choices = c("all", "Depression", "Impoundment", "Riverine", "Slope"),
                          several.ok = T)
-  dom_veg1 <- match.arg(dom_veg1, choices = c("all", "Emergent", "Forest", "Shrub"), several.ok = T)
+  dom_veg1 <- match.arg(dom_veg1, choices = c("all", "emergent", "forest", "shrub"), several.ok = T)
   nativity <- match.arg(nativity, choices = c("all", "adventive", "cryptogeni", "native"), several.ok = T)
   stopifnot(class(years) == "numeric" | class(years) == "integer", years >= 2008)
+  stopifnot(class(intens_mods) == "numeric" | class(intens_mods) == "integer")
 
   #---- Compile data ----
   env <- if(exists("HTLNwetlands")){HTLNwetlands} else {.GlobalEnv}
@@ -81,7 +85,7 @@ getBigTrees <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y"
            error = function(e){stop("tbl_BigTrees not found. Please run importData() first.")})
 
   plots <- getPlots(plot_type = "VIBIplotID", survey_type = survey_type, hgm_class = hgm_class,
-                    dom_veg1 = dom_veg1, plotID = plotID)
+                    dom_veg1 = dom_veg1, plotID = plotID, intens_mods = intens_mods)
 
   plot_ids <- plots$LocationID
 
