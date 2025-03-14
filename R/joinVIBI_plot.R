@@ -453,7 +453,9 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   pct_hydro_reg$PctHydro_Score_reg[pct_hydro_reg$Pct_Hydro_reg == 0] <- 0
   pct_hydro_reg$PctHydro_Score_reg[!pct_hydro_reg$DomVeg_Lev1 %in% "forest"] <- NA
 
-  # ENDED HERE REL_COVER IS NOW CORRECT IN CODE BELOW, BUT WEIGHTED WETNESS IS NOT>
+  # ENDED HERE REL_COVER IS NOW CORRECT IN CODE BELOW, BUT WEIGHTED WETNESS IS NOT = spreadsheet
+  #+++++ THE STATEWIDE METRIC IS STILL USING THE REGIONAL WETNESS CLASSES. IF THE REG WET IS MISSING,
+  #+ IT SOURCES THE STATEWIDE. I NEED TO ADJUST THIS.
   pct_hydro1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, ScientificName,
            OH_STATUS, SHADE,
@@ -461,10 +463,11 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
     #filter(OH_STATUS == "native" ) |> # & WETreg %in% wet ) |> # &
     #      #SHADE %in% c("partial", "shade")) |> # VIBI doesn't filter on SHADE
     #filter(DomVeg_Lev1 %in% c("forest")) |>
-    mutate(weighted_wet = rel_cov * wet_wt) |>
+    mutate(nat_mult = ifelse(OH_STATUS == "native", 1, 0),
+           weighted_wet = rel_cov * wet_wt * nat_mult) |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, tot_cov, ScientificName) |>
     summarize(rel_cover = sum(rel_cov),
-              weighted_wet2 = (sum(weighted_wet, na.rm = T)), .groups = 'drop') |>
+              weighted_wet2 = sum(weighted_wet, na.rm = T), .groups = 'drop') |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, tot_cov) |>
     summarize(Pct_Hydro = (sum(weighted_wet2, na.rm = T)), .groups = 'drop') |>
     mutate(PctHydro_Score = case_when(is.na(Pct_Hydro) ~ NA_real_,
