@@ -65,7 +65,6 @@ vibi23 <- joinVIBI_plot(years = 2023)
 vibi_emerg <- joinVIBI_plot(dom_veg1 = "emergent")
 
 # calculate plot-level VIBI for depressional wetlands
-
 vibi_dep <- joinVIBI_plot(hgm_class = "Depression")
 
 
