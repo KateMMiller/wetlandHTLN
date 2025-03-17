@@ -94,9 +94,17 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   herbs1 <- getHerbs(years = years, survey_type = survey_type, hgm_class = hgm_class,
                      dom_veg1 = dom_veg1, plotID = plotID, nativity = 'all', intens_mods = 4)
 
-  # Set wet status based on the column chosen, like in the macros code
+  # Set wet status based on the column chosen, like in the macros code. Note that the macros
+  # code only replaces blanks in the ACOE regional columns for OBL, FACW, FACU, FAC, and UPL.
+  # Codes not replaces are: (FAC), (FACU-), (FACU), (FACU+), (FACW), (UPL), FAC+, FACU-, FACW+
+  # The spreadsheet then pattern matches FACW with * * wildcards to bring in () and +/-
+  # in the calculation for statewide metric scores, but that won't work for blank regional
+  # scores.
   herbs1$WETreg <- ifelse(is.na(herbs1[,region]), herbs1$WET, herbs1[,region])
   herbs1$WETreg <- ifelse(is.na(herbs1$WETreg), "ND", herbs1$WETreg)
+  # dropping () and +/- indicators from WETreg that came in from WET to match spreadsheet calcs.
+  herbs1$WETreg[grepl("\\(|\\)|\\-|\\+", herbs1$WETreg)] <- NA_character_
+  #table(herbs1$WETreg, herbs1$NCNE, useNA = 'always')
 
   # Extract genus from scientific name
   herbs1$genus <- gsub("([A-Za-z]+).*", "\\1", herbs1$ScientificName)
@@ -113,14 +121,20 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
                             "SampleYear", "DomVeg_Lev1")) |>
     filter(!is.na(MidPoint)) |>  # dropping FeatureID 1007 from 2023 for Mod NA with blank Species and cover.
     mutate(rel_cov = MidPoint/tot_cov,
-           wet_wt = case_when(WET == c("OBL", "(OBL)") ~ 1, # required to match macros spreadsheet calcs, but not mentioned in manual
-                              WET %in% c("FACW", "(FACW)", "FACW+", "(FACW+)", "FACW-", "(FACW-)") ~ 0.662,
+           # wet_wt = case_when(WET == c("OBL", "(OBL)") ~ 1, # required to match macros spreadsheet calcs, but not mentioned in manual
+           #                    WET %in% c("FACW", "(FACW)", "FACW+", "(FACW+)", "FACW-", "(FACW-)") ~ 0.662,
+           #                    WET == "FAC" ~ 0.5,
+           #                    WET == "FACU" ~ 0.333,
+           #                    WET == "UPL" ~ 0,
+           #                    TRUE ~ 0),
+           wet_wt = case_when(WET == "OBL" ~ 1, # required to match macros spreadsheet calcs, but not mentioned in manual
+                              WET %in% "FACW" ~ 0.667,
                               WET == "FAC" ~ 0.5,
                               WET == "FACU" ~ 0.333,
                               WET == "UPL" ~ 0,
                               TRUE ~ 0),
            wet_wt_reg = case_when(WETreg == "OBL" ~ 1, # required to match macros spreadsheet calcs, but not mentioned in manual
-                                  WETreg == "FACW" ~ 0.662,
+                                  WETreg == "FACW" ~ 0.667,
                                   WETreg == "FAC" ~ 0.5,
                                   WETreg == "FACU" ~ 0.333,
                                   WETreg == "UPL" ~ 0,
@@ -204,8 +218,10 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   # Shade community F
   shade1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, OH_STATUS, SHADE, ScientificName) |>
+    unique() |>
     #filter(DomVeg_Lev1 == "forest") |>
-    filter(OH_STATUS == "native" & SHADE %in% c("shade", "partial")) |> unique() |>
+    filter(#OH_STATUS == "native" & # spreadsheet doesn't
+           SHADE %in% c("shade", "partial")) |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1) |>
     summarize(Num_Shade = sum(!is.na(ScientificName)), .groups = 'drop') |>
     mutate(Shade_Score = case_when(is.na(Num_Shade) ~ NA_real_,
@@ -223,10 +239,11 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   shade$Shade_Score[!shade$DomVeg_Lev1 %in% "forest"] <- NA
 
   # Shrub- region Community E, SH
-  shrub_reg1 <- herbs |>
+  shrub_reg1 <- herbs |># filter(FeatureID == "242VK1" & SampleYear == 2023) |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, OH_STATUS, FORM, WETreg, ScientificName) |>
     #filter(DomVeg_Lev1 %in% c("emergent", "shrub")) |>
-    filter(OH_STATUS == "native" & FORM == "shrub" & WETreg %in% c("FACW", "OBL", "(FACW)")) |> unique() |>
+    filter(OH_STATUS == "native" & FORM == "shrub" &
+             WETreg %in% c("OBL", "FACW")) |> unique() |> #, "(FACW)", "FACW+", "(FACW+)")) |> unique() |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1) |>
     summarize(Num_Shrub_reg = sum(!is.na(ScientificName)), .groups= "drop") |>
     mutate(Shrub_Score_reg = case_when(is.na(Num_Shrub_reg) ~ NA_real_,
@@ -246,7 +263,8 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   shrub1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, OH_STATUS, FORM, WET, ScientificName) |>
     #filter(DomVeg_Lev1 %in% c("emergent", "shrub")) |>
-    filter(OH_STATUS == "native" & FORM == "shrub" & WET %in% c("FACW", "OBL", "(FACW)")) |> unique() |>
+    filter(OH_STATUS == "native" & FORM == "shrub" &
+             WET %in% c("OBL", "FACW", "(FACW)", "FACW+", "(FACW+)")) |> unique() |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1) |>
     summarize(Num_Shrub = sum(!is.na(ScientificName)), .groups= "drop") |>
     mutate(Shrub_Score = case_when(is.na(Num_Shrub) ~ NA_real_,
@@ -425,20 +443,19 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
 
   # % Hydrophyte using rel_cov: OH_STATUS = native, SHADE = shade or partial, WET/WETreg = FACW (FACW) OBL
   # *if total cover(sum of cover values for all species observed in sample plot is <10%, all % metrics scored as 0)
-  wet <- unique(tluSpp$WET[grepl("OBL|FACW", tluSpp$WET)])
+  #wet <- unique(tluSpp$WET[grepl("OBL|FACW", tluSpp$WET)]) # not using this anymore, as wet_wt is used instead, where UPL = 0
 
   pct_hydro_reg1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, ScientificName,
-           OH_STATUS, SHADE,
-           WETreg, tot_cov, rel_cov, wet_wt_reg) |>
-    filter(OH_STATUS == "native") |> # & WETreg %in% wet ) |> # &
-    #      #SHADE %in% c("partial", "shade")) |> # VIBI doesn't filter on SHADE
+           OH_STATUS, SHADE, WETreg, tot_cov, rel_cov) |>
+    filter(OH_STATUS == "native" & WETreg %in% wet ) |> # &
+    #      #SHADE %in% c("partial", "shade")) |> # VIBI spreadsheet doesn't filter on SHADE
     #filter(DomVeg_Lev1 %in% c("forest")) |>
-    mutate(weighted_wet = rel_cov * wet_wt_reg) |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, tot_cov, ScientificName) |>
-    summarize(weighted_wet2 = (sum(weighted_wet, na.rm = T)), .groups = 'drop') |>
+    summarize(rel_cov = sum(rel_cov), .groups = 'drop') |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, tot_cov) |>
-    summarize(Pct_Hydro_reg = (sum(weighted_wet2, na.rm = T)), .groups = 'drop') |>
+    summarize(Pct_Hydro_reg = sum(rel_cov),
+              .groups = 'drop') |>
     mutate(PctHydro_Score_reg = case_when(is.na(Pct_Hydro_reg) ~ NA_real_,
                                           tot_cov < 0.10 ~ 0, # first case
                                           Pct_Hydro_reg <= 0.1 ~ 0,
@@ -453,23 +470,18 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   pct_hydro_reg$PctHydro_Score_reg[pct_hydro_reg$Pct_Hydro_reg == 0] <- 0
   pct_hydro_reg$PctHydro_Score_reg[!pct_hydro_reg$DomVeg_Lev1 %in% "forest"] <- NA
 
-  # ENDED HERE REL_COVER IS NOW CORRECT IN CODE BELOW, BUT WEIGHTED WETNESS IS NOT = spreadsheet
-  #+++++ THE STATEWIDE METRIC IS STILL USING THE REGIONAL WETNESS CLASSES. IF THE REG WET IS MISSING,
-  #+ IT SOURCES THE STATEWIDE. I NEED TO ADJUST THIS.
+
   pct_hydro1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, ScientificName,
-           OH_STATUS, SHADE,
-           WETreg, tot_cov, rel_cov, wet_wt) |>
-    #filter(OH_STATUS == "native" ) |> # & WETreg %in% wet ) |> # &
-    #      #SHADE %in% c("partial", "shade")) |> # VIBI doesn't filter on SHADE
+           OH_STATUS, SHADE, WET, tot_cov, rel_cov) |>
+    filter(OH_STATUS == "native" & WET %in% wet) |> # &
+    #      #SHADE %in% c("partial", "shade")) |> # VIBI spreadsheet doesn't filter on SHADE
     #filter(DomVeg_Lev1 %in% c("forest")) |>
-    mutate(nat_mult = ifelse(OH_STATUS == "native", 1, 0),
-           weighted_wet = rel_cov * wet_wt * nat_mult) |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, tot_cov, ScientificName) |>
-    summarize(rel_cover = sum(rel_cov),
-              weighted_wet2 = sum(weighted_wet, na.rm = T), .groups = 'drop') |>
+    summarize(rel_cov = sum(rel_cov), .groups = 'drop') |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, tot_cov) |>
-    summarize(Pct_Hydro = (sum(weighted_wet2, na.rm = T)), .groups = 'drop') |>
+    summarize(Pct_Hydro = sum(rel_cov),
+              .groups = 'drop') |>
     mutate(PctHydro_Score = case_when(is.na(Pct_Hydro) ~ NA_real_,
                                           tot_cov < 0.10 ~ 0, # first case
                                           Pct_Hydro <= 0.1 ~ 0,
@@ -525,6 +537,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
            ScientificName, COFC, tot_cov, rel_cov) |>
     filter(COFC <= 2) |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, tot_cov) |>
+    #group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, tot_cov, ScientificName) |>
     summarize(Pct_Tol = sum(rel_cov, na.rm = T), .groups = 'drop') |>
     mutate(PctTol_Score = case_when(is.na(Pct_Tol) ~ NA_real_,
                                     tot_cov < 0.10 ~ 0, # first case
@@ -707,6 +720,8 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   IV[,c("rel_class_freq", "rel_ba", "rel_dens")][is.na(IV[,c("rel_class_freq", "rel_ba", "rel_dens")])] <- 0
   IV$IV = (IV$rel_class_freq + IV$rel_ba + IV$rel_dens)/3
 
+  #ivcheck <- IV |> filter(FeatureID == "242VK2" & SampleYear == 2023)
+
   #---- Subcanopy IV ----
   # for F and SH
   # Manual states that subcan IV is the sum IV of
@@ -765,6 +780,11 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
                                       CanopyIV > 0 & CanopyIV < 0.14 ~ 10,
                                       CanopyIV == 0 ~ 0, # from *** in Table 2
                                       TRUE ~ NA_real_))
+
+  # canIV_check <- IV |> filter(FeatureID == "242VK2" & SampleYear == 2023) |>
+  #   filter(OH_STATUS == "native") |> filter(FORM %in% "tree") |>
+  #   group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ScientificName) |>
+  #   summarize(CanopyIV = sum(IV)/(sum(IV > 0)))
 
   # Add 0s where no canopy trees were found and drop scores from non-forest
   canopy_IV <- left_join(woody_lj, canopy_IV1, by = c("LocationID", "FeatureID", "SampleYear", "DomVeg_Lev1"))
