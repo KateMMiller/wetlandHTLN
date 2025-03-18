@@ -111,7 +111,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   # Calc Relative Cover
   herbs_rc <- herbs1 |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1) |>
-    summarize(tot_cov = (sum(MidPoint, na.rm = T)), .groups = 'drop') # Divide by 4 at the end for tot cover
+    summarize(tot_cov = (sum(MidPoint, na.rm = T)), .groups = 'drop') # Divide by 4 at the end for avg plot cover
 
 
   # join back with larger dataset
@@ -119,26 +119,31 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
                      by = c("LocationID", "FeatureID", "EventID", "SampleDate",
                             "SampleYear", "DomVeg_Lev1")) |>
     filter(!is.na(MidPoint)) |>  # dropping FeatureID 1007 from 2023 for Mod NA with blank Species and cover.
-    mutate(rel_cov = MidPoint/tot_cov,
-           # wet_wt = case_when(WET == c("OBL", "(OBL)") ~ 1, # required to match macros spreadsheet calcs, but not mentioned in manual
-           #                    WET %in% c("FACW", "(FACW)", "FACW+", "(FACW+)", "FACW-", "(FACW-)") ~ 0.662,
+    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, DomVeg_Lev2,
+             genus, FAMILY, OH_STATUS, TYPE, SHADE, FORM, WET, WETreg, COFC, HABIT,
+             ScientificName) |>
+    summarize(spp_cov = sum(MidPoint),
+              rel_cov = spp_cov/first(tot_cov),
+              tot_cov = first(tot_cov),
+              cov_wt_c = rel_cov*first(COFC),
+              .groups = "drop")
+           # Commented out code is in macros spreadsheet, but doesn't appear to be used in spreadsheet calcs.
+           # Also not mentioned in manual.
+           # wet_wt = case_when(WET == "OBL" ~ 1,
+           #                    WET %in% "FACW" ~ 0.667,
            #                    WET == "FAC" ~ 0.5,
            #                    WET == "FACU" ~ 0.333,
            #                    WET == "UPL" ~ 0,
            #                    TRUE ~ 0),
-           wet_wt = case_when(WET == "OBL" ~ 1, # required to match macros spreadsheet calcs, but not mentioned in manual
-                              WET %in% "FACW" ~ 0.667,
-                              WET == "FAC" ~ 0.5,
-                              WET == "FACU" ~ 0.333,
-                              WET == "UPL" ~ 0,
-                              TRUE ~ 0),
-           wet_wt_reg = case_when(WETreg == "OBL" ~ 1, # required to match macros spreadsheet calcs, but not mentioned in manual
-                                  WETreg == "FACW" ~ 0.667,
-                                  WETreg == "FAC" ~ 0.5,
-                                  WETreg == "FACU" ~ 0.333,
-                                  WETreg == "UPL" ~ 0,
-                                  TRUE ~ 0)
-           )
+           # wet_wt_reg = case_when(WETreg == "OBL" ~ 1,
+           #                        WETreg == "FACW" ~ 0.667,
+           #                        WETreg == "FAC" ~ 0.5,
+           #                        WETreg == "FACU" ~ 0.333,
+           #                        WETreg == "UPL" ~ 0,
+           #                        TRUE ~ 0))
+
+  # Create list of wet indicators from tluSpp
+  wet <- unique(tluSpp$WET[grepl("OBL|FACW", tluSpp$WET)])
 
   # Create table to left_join with herb vibi metrics; There are no sample qualifiers for sampled, but non present
   # So assuming if there's a record in this df below, and the community matches, the VIBI should be 0 for herb vibis
@@ -188,6 +193,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   cyper$Num_Cyper[is.na(cyper$Num_Cyper)] <- 0
   cyper$Cyper_Score[cyper$Num_Cyper == 0] <- 0
   cyper$Cyper_Score[!cyper$DomVeg_Lev1 %in% "emergent-coastal"] <- NA
+
 
   # dicot Community E SH
   dicot1 <- herbs |>
@@ -263,7 +269,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, OH_STATUS, FORM, WET, ScientificName) |>
     #filter(DomVeg_Lev1 %in% c("emergent", "shrub")) |>
     filter(OH_STATUS == "native" & FORM == "shrub" &
-             WET %in% c("OBL", "FACW", "(FACW)", "FACW+", "(FACW+)")) |> unique() |>
+             WET %in% wet) |> unique() |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1) |>
     summarize(Num_Shrub = sum(!is.na(ScientificName)), .groups= "drop") |>
     mutate(Shrub_Score = case_when(is.na(Num_Shrub) ~ NA_real_,
@@ -279,9 +285,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   shrub$Shrub_Score[shrub$Num_Shrub == 0] <- 0
   shrub$Shrub_Score[shrub$DomVeg_Lev1 == "forest"] <- NA
 
-  # Hydrophyte- region # native FACW and OBL
-  wet <- unique(tluSpp$WET[grepl("OBL|FACW", tluSpp$WET)])
-
+  # Hydrophyte richness- region # native FACW and OBL
   hydrop_reg1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, OH_STATUS, WETreg, ScientificName) |>
     #filter(DomVeg_Lev1 %in% c("emergent", "shrub")) |>
@@ -408,7 +412,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   CovWt_CofC <- herbs |>
     mutate(cov_wt_C = rel_cov * COFC) |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, tot_cov) |>
-    summarize(cov_wt_C = (sum(cov_wt_C, na.rm = T))/4, .groups = 'drop') |> # avg to match spreadsheet
+    summarize(cov_wt_C = sum(cov_wt_C, na.rm = T), .groups = 'drop') |> # avg to match spreadsheet
     mutate(#Cov_Wt_C_Score = case_when(is.na(cov_wt_C) ~ NA_real_, # I don't think this is actually scored outside of FQ
            #                          cov_wt_C == 0 ~ 0,
            #                          cov_wt_C > 0 & cov_wt_C <= 6 ~ 3,
@@ -536,7 +540,6 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
            ScientificName, COFC, tot_cov, rel_cov) |>
     filter(COFC <= 2) |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, tot_cov) |>
-    #group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, tot_cov, ScientificName) |>
     summarize(Pct_Tol = sum(rel_cov, na.rm = T), .groups = 'drop') |>
     mutate(PctTol_Score = case_when(is.na(Pct_Tol) ~ NA_real_,
                                     tot_cov < 0.10 ~ 0, # first case
@@ -869,6 +872,8 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
 
   vibi_comb2 <- left_join(full_evs, vibi_comb, by = c("LocationID", "FeatureID", "SampleYear"))
 
+  vibi_comb2$Avg_Plot_Cover <- vibi_comb2$tot_cov / 4 # Only allowing sites with 4 intense modules
+
   #names(vibi_comb2)[grepl("Score", names(vibi_comb2))]
 
   score_reg_cols <- c("Carex_Score", "Cyper_Score",
@@ -883,10 +888,9 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
                         "PctBryo_Score", "PctHydro_Score", "PctSens_Score", "PctTol_Score", "PctInvGram_Score",
                         "SmTree_Score", "SubcanIV_Score", "CanopyIV_Score", "Biomass_Score")
 
-  vibi_fq_cols <- c("FQAI_Score_FQ", "Cov_Wt_C_Score_FQ")
+  vibi_fq_cols <- c("FQAI_Score_FQ", "Cov_Wt_C_Score_FQ", "Avg_Plot_Cover")
 
   final_dat <- left_join(plots_abbr, vibi_comb2, by = c("LocationID", "FeatureID", "DomVeg_Lev1"))
-
 
   final_dat$VIBI_Score_ACOEReg <- rowSums(final_dat[,score_reg_cols], na.rm = T)
   final_dat$VIBI_Score_State <- rowSums(final_dat[,score_state_cols], na.rm = T)
