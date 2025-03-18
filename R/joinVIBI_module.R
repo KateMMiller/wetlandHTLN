@@ -428,7 +428,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     filter(FORM == "bryo") |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1) |>
     summarize(Pct_Bryo = sum(rel_cov, na.rm = T), .groups = 'drop') |>
-    mutate(PctBryo_Score = case_when(is.na(Pct_Bryo) ~ NA_real_,
+    mutate(Pct_Bryo_Score = case_when(is.na(Pct_Bryo) ~ NA_real_,
                                      Pct_Bryo <= 0.01 ~ 0,
                                      Pct_Bryo > 0.01 & Pct_Bryo <= 0.03 ~ 3,
                                      Pct_Bryo > 0.03 & Pct_Bryo <= 0.06 ~ 7,
@@ -438,8 +438,8 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   # Add 0s where no bryos were found in forest or shrub
   pct_bryo <- left_join(herbs_lj, pct_bryo1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo", "DomVeg_Lev1"))
   pct_bryo$Pct_Bryo[is.na(pct_bryo$Pct_Bryo)] <- 0
-  pct_bryo$PctBryo_Score[pct_bryo$Pct_Bryo == 0] <- 0
-  pct_bryo$PctBryo_Score[pct_bryo$DomVeg_Lev1 %in% "emergent"] <- NA
+  pct_bryo$Pct_Bryo_Score[pct_bryo$Pct_Bryo == 0] <- 0
+  pct_bryo$Pct_Bryo_Score[pct_bryo$DomVeg_Lev1 %in% "emergent"] <- NA
 
 
   # % Hydrophyte using rel_cov: OH_STATUS = native, SHADE = shade or partial, WET/WETreg = FACW (FACW) OBL
@@ -453,7 +453,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1, tot_cov) |>
     summarize(Pct_Hydro_reg = sum(rel_cov, na.rm = T),
               .groups = 'drop') |>
-    mutate(PctHydro_Score_reg = case_when(is.na(Pct_Hydro_reg) ~ NA_real_,
+    mutate(Pct_Hydro_Score_reg = case_when(is.na(Pct_Hydro_reg) ~ NA_real_,
                                           tot_cov < 10 ~ 0, # first case
                                           Pct_Hydro_reg <= 0.1 ~ 0,
                                           Pct_Hydro_reg > 0.1 & Pct_Hydro_reg <= 0.15 ~ 3,
@@ -464,8 +464,8 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   # Add 0s where no hydros were found in forest or shrub
   pct_hydro_reg <- left_join(herbs_lj, pct_hydro_reg1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo", "DomVeg_Lev1"))
   pct_hydro_reg$Pct_Hydro_reg[is.na(pct_hydro_reg$Pct_Hydro_reg)] <- 0
-  pct_hydro_reg$PctHydro_Score_reg[pct_hydro_reg$Pct_Hydro_reg == 0] <- 0
-  pct_hydro_reg$PctHydro_Score_reg[!pct_hydro_reg$DomVeg_Lev1 %in% "forest"] <- NA
+  pct_hydro_reg$Pct_Hydro_Score_reg[pct_hydro_reg$Pct_Hydro_reg == 0] <- 0
+  pct_hydro_reg$Pct_Hydro_Score_reg[!pct_hydro_reg$DomVeg_Lev1 %in% "forest"] <- NA
 
 
   pct_hydro1 <- herbs |>
@@ -476,7 +476,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     #filter(DomVeg_Lev1 %in% c("forest")) |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1, tot_cov) |>
     summarize(Pct_Hydro = sum(rel_cov, na.rm = T), .groups = 'drop') |>
-    mutate(PctHydro_Score = case_when(is.na(Pct_Hydro) ~ NA_real_,
+    mutate(Pct_Hydro_Score = case_when(is.na(Pct_Hydro) ~ NA_real_,
                                       tot_cov < 0.10 ~ 0, # first case
                                       Pct_Hydro <= 0.1 ~ 0,
                                       Pct_Hydro > 0.1 & Pct_Hydro <= 0.15 ~ 3,
@@ -487,8 +487,8 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   # Add 0s where no hydros were found in forest or shrub
   pct_hydro <- left_join(herbs_lj, pct_hydro1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo", "DomVeg_Lev1"))
   pct_hydro$Pct_Hydro[is.na(pct_hydro$Pct_Hydro)] <- 0
-  pct_hydro$PctHydro_Score[pct_hydro$Pct_Hydro == 0] <- 0
-  pct_hydro$PctHydro_Score[!pct_hydro$DomVeg_Lev1 %in% "forest"] <- NA
+  pct_hydro$Pct_Hydro_Score[pct_hydro$Pct_Hydro == 0] <- 0
+  pct_hydro$Pct_Hydro_Score[!pct_hydro$DomVeg_Lev1 %in% "forest"] <- NA
 
   # % sensitive - rel cover of COFC >=6, for DomVeg_Lev1 = shrub, buttonbush is not included as %sensitive
   # *if total cover(sum of cover values for all species observed in sample plot is <10%, all % metrics scored as 0)
@@ -499,7 +499,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     filter(!(DomVeg_Lev1 == "shrub" & ScientificName %in% "Cephalanthus occidentalis")) |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1, tot_cov) |>
     summarize(Pct_Sens = sum(rel_cov, na.rm = T), .groups = 'drop') |>
-    mutate(PctSens_Score = case_when(is.na(Pct_Sens) ~ NA_real_,
+    mutate(Pct_Sens_Score = case_when(is.na(Pct_Sens) ~ NA_real_,
                                      tot_cov < 10 ~ 0, # first case,
                                      DomVeg_Lev1 %in% c("emergent") & Pct_Sens <= 0.025 ~ 0,
                                      DomVeg_Lev1 %in% c("emergent") & Pct_Sens > 0.025 & Pct_Sens <= 0.10 ~ 3,
@@ -520,7 +520,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   # Add 0s where no hydros were found in forest or shrub
   pct_sens <- left_join(herbs_lj, pct_sens1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo", "DomVeg_Lev1"))
   pct_sens$Pct_Sens[is.na(pct_sens$Pct_Sens)] <- 0
-  pct_sens$PctSens_Score[pct_sens$Pct_Sens == 0] <- 0
+  pct_sens$Pct_Sens_Score[pct_sens$Pct_Sens == 0] <- 0
 
   # % tolerant
   # *if total cover(sum of cover values for all species observed in sample plot is <10%, all % metrics scored as 0)
@@ -530,7 +530,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     filter(COFC <= 2) |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1, tot_cov) |>
     summarize(Pct_Tol = sum(rel_cov, na.rm = T), .groups = 'drop') |>
-    mutate(PctTol_Score = case_when(is.na(Pct_Tol) ~ NA_real_,
+    mutate(Pct_Tol_Score = case_when(is.na(Pct_Tol) ~ NA_real_,
                                     tot_cov < 0.10 ~ 0, # first case
                                     DomVeg_Lev1 %in% c("emergent") & Pct_Tol >= 0.60 ~ 0,
                                     DomVeg_Lev1 %in% c("emergent") & Pct_Tol >= 0.40  & Pct_Tol < 0.60 ~ 3,
@@ -551,7 +551,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   # Add 0s where no hydros were found in forest or shrub
   pct_tol <- left_join(herbs_lj, pct_tol1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo", "DomVeg_Lev1"))
   pct_tol$Pct_Tol[is.na(pct_tol$Pct_Tol)] <- 0
-  pct_tol$PctTol_Score[pct_tol$Pct_Tol == 0] <- 0
+  pct_tol$Pct_Tol_Score[pct_tol$Pct_Tol == 0] <- 0
 
   # Invasive graminoids: Phalaris arundinaceae, Typha spp. Phragmites australis
   # *if total cover(sum of cover values for all species observed in sample plot is <10%, all % metrics scored as 0)
@@ -571,7 +571,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     # that, although there's not a site like this in the data.
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1, DomVeg_Lev2, tot_cov) |>
     summarize(Pct_InvGram = sum(rel_cov, na.rm = T), .groups = 'drop') |>
-    mutate(PctInvGram_Score = case_when(is.na(Pct_InvGram) ~ NA_real_,
+    mutate(Pct_InvGram_Score = case_when(is.na(Pct_InvGram) ~ NA_real_,
                                         tot_cov < 10 ~ 0, # first case
                                         Pct_InvGram >= 0.31 ~ 0,
                                         Pct_InvGram >= 0.15 & Pct_InvGram < 0.31 ~ 3,
@@ -582,9 +582,9 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   # Add 0s where no invgrams were found in forest or shrub
   pct_invgram <- left_join(herbs_lj, pct_invgram1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo", "DomVeg_Lev1"))
   pct_invgram$Pct_InvGram[is.na(pct_invgram$Pct_InvGram)] <- 0
-  pct_invgram$PctInvGram_Score[pct_invgram$Pct_InvGram == 0] <- 0
-  pct_invgram$PctInvGram_Score[pct_invgram$DomVeg_Lev1 == "forest"] <- NA
-  pct_invgram$PctInvGram_Score[pct_invgram$DomVeg_Lev1 == "shrub" &
+  pct_invgram$Pct_InvGram_Score[pct_invgram$Pct_InvGram == 0] <- 0
+  pct_invgram$Pct_InvGram_Score[pct_invgram$DomVeg_Lev1 == "forest"] <- NA
+  pct_invgram$Pct_InvGram_Score[pct_invgram$DomVeg_Lev1 == "shrub" &
                                  (is.na(pct_invgram$DomVeg_Lev2)  |
                                     !pct_invgram$DomVeg_Lev2 == "Bog Shrub Swamp")] <- NA
 
@@ -839,12 +839,12 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     svp |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_SVP, SVP_Score),
     FQAI |> select(LocationID, FeatureID, SampleYear, ModuleNo, NumSpp, FQAI, FQAI_Score, FQAI_Score_FQ),
     CovWt_CofC |> select(LocationID, FeatureID, SampleYear, ModuleNo, tot_cov, cov_wt_C, Cov_Wt_C_Score_FQ),
-    pct_bryo |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Bryo, PctBryo_Score),
+    pct_bryo |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Bryo, Pct_Bryo_Score),
     pct_hydro_reg |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Hydro_reg, PctHydro_Score_reg),
-    pct_hydro |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Hydro, PctHydro_Score),
-    pct_sens |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Sens, PctSens_Score),
-    pct_tol |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Tol, PctTol_Score),
-    pct_invgram |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_InvGram, PctInvGram_Score),
+    pct_hydro |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Hydro, Pct_Hydro_Score),
+    pct_sens |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Sens, Pct_Sens_Score),
+    pct_tol |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Tol, Pct_Tol_Score),
+    pct_invgram |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_InvGram, Pct_InvGram_Score),
     pole |> select(LocationID, FeatureID, SampleYear, ModuleNo, RelDen_SmTree, SmTree_Score),
     subcan_IV |> select(LocationID, FeatureID, SampleYear, ModuleNo, SubcanIV, SubcanIV_Score),
     canopy_IV |> select(LocationID, FeatureID, SampleYear, ModuleNo, CanopyIV, CanopyIV_Score),
