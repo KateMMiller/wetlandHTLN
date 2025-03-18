@@ -85,7 +85,7 @@ getPlots <- function(plot_type = "VIBIplotID", survey_type = 'all', hgm_class = 
   plot5 <- if(any(plotID == 'all')){plot4
   } else {plot4[plot4$FeatureID %in% plotID,]}
 
-  plot6 <- plot5[plot5$InternMods == intens_mods,]
+  plot6 <- plot5[plot5$InternMods %in% intens_mods,]
 
   return(plot6)
 }
