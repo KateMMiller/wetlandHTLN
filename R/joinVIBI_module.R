@@ -46,6 +46,11 @@
 #' # calculate module-level VIBI for all sites (default).
 #' vibi <- joinVIBI_module()
 #'
+#' write.csv(vibi, "./testing_scripts/vibimodule.csv", row.names=F)
+#'
+#' # calculate module-level VIBI for plot 124 and year 2023
+#' vibi124 <- joinVIBI_module(plotID = "124", years = 2023)
+#'
 #' # calculate module-level VIBI for all sites sampled in 2023
 #' vibi23 <- joinVIBI_module(years = 2023)
 #'
@@ -53,8 +58,9 @@
 #' vibi_emerg <- joinVIBI_module(dom_veg1 = "emergent")
 #'
 #' # calculate module-level VIBI for depressional wetlands
-#'
 #' vibi_dep <- joinVIBI_module(hgm_class = "Depression")
+#'
+#' # calculate
 #'
 #'
 #' }
@@ -93,7 +99,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
 
   #---- Compile Herb Metrics ----
   herbs1 <- getHerbs(years = years, survey_type = survey_type, hgm_class = hgm_class,
-                     dom_veg1 = dom_veg1, plotID = plotID, nativity = 'all')
+                     dom_veg1 = dom_veg1, plotID = plotID, nativity = 'all', intens_mods = intens_mods)
 
   # Set wet status based on the column chosen, like in the macros code
   herbs1$WETreg <- ifelse(is.na(herbs1[,region]), herbs1$WET, herbs1[,region])
@@ -107,13 +113,26 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1) |>
     summarize(tot_cov = sum(MidPoint, na.rm = T), .groups = 'drop')
 
-
   # join back with larger dataset
   herbs <- left_join(herbs1, herbs_rc,
                      by = c("LocationID", "FeatureID", "EventID", "SampleDate",
                             "SampleYear", "ModuleNo", "DomVeg_Lev1")) |>
     filter(!is.na(MidPoint)) |>  # dropping FeatureID 1007 from 2023 for Mod NA with blank Species and cover.
-    mutate(rel_cov = MidPoint/tot_cov)
+    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, DomVeg_Lev2, ModuleNo,
+             genus, FAMILY, OH_STATUS, TYPE, SHADE, FORM, WET, WETreg, COFC, HABIT,
+             ScientificName) |>
+    summarize(spp_cov = sum(MidPoint),
+              rel_cov = spp_cov/first(tot_cov),
+              tot_cov = first(tot_cov),
+              cov_wt_c = rel_cov*first(COFC),
+              .groups = "drop")
+
+  # join back with larger dataset
+  # herbs <- left_join(herbs1, herbs_rc,
+  #                    by = c("LocationID", "FeatureID", "EventID", "SampleDate",
+  #                           "SampleYear", "ModuleNo", "DomVeg_Lev1")) |>
+  #   filter(!is.na(MidPoint)) |>  # dropping FeatureID 1007 from 2023 for Mod NA with blank Species and cover.
+  #   mutate(rel_cov = MidPoint/tot_cov)
 
   # Create table to left_join with herb vibi metrics; There are no sample qualifiers for sampled, but non present
   # So assuming if there's a record in this df below, and the community matches, the VIBI should be 0 for herb vibis
@@ -122,6 +141,9 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   # herbs_check <- herbs |> group_by(LocationID, FeatureID, EventID, SampleYear, ModuleNo) |>
   #   summarize(sum_rel = sum(rel_cov))
   # table(herbs_check$sum_rel, useNA = 'always') # all sum to 1
+
+  # Create list of wet indicators from tluSpp
+  wet <- unique(tluSpp$WET[grepl("OBL|FACW", tluSpp$WET)])
 
   # Using macros cases to determine the exact ranges of VIBI scores (ie whether <= or < vs >= or >)
   # Carex Community E, SH
@@ -239,7 +261,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   shrub1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
            OH_STATUS, FORM, WET, ScientificName) |>
-    filter(DomVeg_Lev1 %in% c("emergent", "shrub")) |>
+    #filter(DomVeg_Lev1 %in% c("emergent", "shrub")) |>
     filter(OH_STATUS == "native" & FORM == "shrub" & WET %in% c("FACW", "OBL", "(FACW)")) |> unique() |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1) |>
     summarize(Num_Shrub = sum(!is.na(ScientificName)), .groups= "drop") |>
@@ -255,9 +277,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   shrub$Num_Shrub[is.na(shrub$Num_Shrub) & shrub$DomVeg_Lev1 %in% c("emergent", "shrub")] <- 0
   shrub$Shrub_Score[shrub$Num_Shrub == 0 & shrub$DomVeg_Lev1 %in% c("emergent", "shrub")] <- 0
 
-  # Hydrophyte- region # native FACW and OBL
-  wet <- unique(tluSpp$WET[grepl("OBL|FACW", tluSpp$WET)])
-
+  # Hydrophyte richness- region # native FACW and OBL
   hydrop_reg1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1,
            OH_STATUS, WETreg, ScientificName) |>
@@ -470,8 +490,6 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   pct_hydro$PctHydro_Score[pct_hydro$Pct_Hydro == 0] <- 0
   pct_hydro$PctHydro_Score[!pct_hydro$DomVeg_Lev1 %in% "forest"] <- NA
 
-  #+++++ ENDED HERE ++++++
-
   # % sensitive - rel cover of COFC >=6, for DomVeg_Lev1 = shrub, buttonbush is not included as %sensitive
   # *if total cover(sum of cover values for all species observed in sample plot is <10%, all % metrics scored as 0)
   pct_sens1 <- herbs |>
@@ -513,7 +531,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1, tot_cov) |>
     summarize(Pct_Tol = sum(rel_cov, na.rm = T), .groups = 'drop') |>
     mutate(PctTol_Score = case_when(is.na(Pct_Tol) ~ NA_real_,
-                                    tot_cov < 10 ~ 0, # first case
+                                    tot_cov < 0.10 ~ 0, # first case
                                     DomVeg_Lev1 %in% c("emergent") & Pct_Tol >= 0.60 ~ 0,
                                     DomVeg_Lev1 %in% c("emergent") & Pct_Tol >= 0.40  & Pct_Tol < 0.60 ~ 3,
                                     DomVeg_Lev1 %in% c("emergent") & Pct_Tol >= 0.20 & Pct_Tol < 0.40 ~ 7,
@@ -545,8 +563,8 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1, DomVeg_Lev2,
            ScientificName, tot_cov, rel_cov) |>
     filter(ScientificName %in% inv_grams) |> #unique() |>
-    filter(DomVeg_Lev1 %in% c("emergent") |
-             (DomVeg_Lev1 == "shrub" & DomVeg_Lev2 == "Bog Shrub Swamp")) |>
+    # filter(DomVeg_Lev1 %in% c("emergent") |
+    #          (DomVeg_Lev1 == "shrub" & DomVeg_Lev2 == "Bog Shrub Swamp")) |>
     # leatherleaf bog isn't in the CUVA data, but including it here because of pg 19 of
     # EPA manual states that this metric replaces the subcanopy IV metric for this community.
     # Based on the VIBI spreadsheet and the HTLN database, Bog Shrub Swamp seems to cover
@@ -563,19 +581,18 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
 
   # Add 0s where no invgrams were found in forest or shrub
   pct_invgram <- left_join(herbs_lj, pct_invgram1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo", "DomVeg_Lev1"))
-  pct_invgram$Pct_InvGram[is.na(pct_invgram$Pct_InvGram) & pct_invgram$DomVeg_Lev1 %in% c("emergent")] <- 0
-  pct_invgram$PctInvGram_Score[pct_invgram$Pct_InvGram == 0 & pct_invgram$DomVeg_Lev1 %in% c("emergent")] <- 0
-
-  pct_invgram$Pct_InvGram[is.na(pct_invgram$Pct_InvGram) &
-                            (pct_invgram$DomVeg_Lev1 %in% c("shrub") & pct_invgram$DomVeg_Lev2 == "Bog Shrub Swamp")] <- 0
-  pct_invgram$PctInvGram_Score[pct_invgram$Pct_InvGram == 0 &
-                                 (pct_invgram$DomVeg_Lev1 %in% c("shrub") & pct_invgram$DomVeg_Lev2 == "Bog Shrub Swamp")] <- 0
+  pct_invgram$Pct_InvGram[is.na(pct_invgram$Pct_InvGram)] <- 0
+  pct_invgram$PctInvGram_Score[pct_invgram$Pct_InvGram == 0] <- 0
+  pct_invgram$PctInvGram_Score[pct_invgram$DomVeg_Lev1 == "forest"] <- NA
+  pct_invgram$PctInvGram_Score[pct_invgram$DomVeg_Lev1 == "shrub" &
+                                 (is.na(pct_invgram$DomVeg_Lev2)  |
+                                    !pct_invgram$DomVeg_Lev2 == "Bog Shrub Swamp")] <- NA
 
   #---- Compile Woody and Big Tree metrics ----
   # For woody metrics to work, need to drop big tree records from tbl_VIBI_Woody and
   # then row bind the Big Tree DBH records
   woody1 <- getWoody(years = years, survey_type = survey_type, hgm_class = hgm_class,
-                     dom_veg1 = dom_veg1, plotID = plotID, nativity = 'all')
+                     dom_veg1 = dom_veg1, plotID = plotID, nativity = 'all', intens_mods = intens_mods)
 
   woody1$Count[woody1$Count == -9999] <- NA_real_
   woody1 <- woody1 |> mutate(ba_cm2 = (pi*(DBH_MidPt/2)^2)*Count)
@@ -586,7 +603,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   woody2 <- woody1 |> filter(!DiamID %in% "BIG")
 
   bigt1 <- getBigTrees(years = years, survey_type = survey_type, hgm_class = hgm_class,
-                       dom_veg1 = dom_veg1, plotID = plotID, nativity = 'all') |>
+                       dom_veg1 = dom_veg1, plotID = plotID, nativity = 'all', intens_mods = intens_mods) |>
     mutate(BIG_ba_cm2 = pi*(DBH/2)^2)
 
   # Set wet status based on the column chosen, like in the macros code
@@ -625,7 +642,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   woody <- left_join(woody_comb, woody_rc,
                      by = c("LocationID", "FeatureID", "EventID", "SampleDate",
                             "SampleYear", "ModuleNo", "DomVeg_Lev1")) |>
-    filter(!is.na(Count)) # dropping FeatureID 305 from 2015 for Mod 3 Carya ovata C5 with -9999.
+    filter(!is.na(Count)) # this filter drops FeatureID 305 from 2015 for Mod 3 Carya ovata C5 with -9999.
     # It's also a duplicate record, as there's a Carya ovata in the same size class with a count in Mod 3.
 
   # Create table to left_join with herb vibi metrics; There are no sample qualifiers for sampled, but non present
@@ -641,7 +658,8 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   #table(woody$DiamID, woody$DiamVal) C5-C7
   #**If no or only a few woody stems >1m tall in sample plot or if stems per ha <10, score metric as 0.
   # Interpreting this as <= 3 stems >1m tall
-  pole1 <- woody |> filter(DomVeg_Lev1 == "forest") |> filter(DiamID %in% c("C5", "C6", "C7")) |>
+  pole1 <- woody |> #filter(DomVeg_Lev1 == "forest") |>
+    filter(DiamID %in% c("C5", "C6", "C7")) |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1) |>
     summarize(RelDen_SmTree = sum(Count)/first(tot_stems),
               tot_stems_per_ha = first(tot_stems_per_ha),
@@ -656,9 +674,9 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
 
   # Add 0s where no pole trees were found in forest
   pole <- left_join(woody_lj, pole1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo", "DomVeg_Lev1"))
-  pole$RelDen_SmTree[is.na(pole$RelDen_SmTree) & pole$DomVeg_Lev1 == "forest"] <- 0
-  pole$SmTree_Score[pole$RelDen_SmTree == 0 & pole$DomVeg_Lev1 == "forest"] <- 0
-
+  pole$RelDen_SmTree[is.na(pole$RelDen_SmTree)] <- 0
+  pole$SmTree_Score[pole$RelDen_SmTree == 0] <- 0
+  pole$SmTree_Score[!pole$DomVeg_Lev1 %in% "forest"] <- NA
   # Canopy and Subcanopy IV
   # Had to rbind all woody <40cm to Big Trees records to get correct DBH and BA for IV
   IV <- woody |>
@@ -682,11 +700,12 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
                "C5_BA", "C6_BA", "C7_BA", "C8_BA", "C9_BA",
                "C10_BA", "BIG_BA")
 
-  miss_cols <- setdiff(count_cols, c(names(IV), names(ba_cols)))
+  miss_cols <- setdiff(c(count_cols, ba_cols), c(names(IV)))
   IV[miss_cols] <- 0
 
   # Calc rel class freq
   IV$rel_class_freq = rowSums(IV[,count_cols] > 0, na.rm = T) / length(count_cols) # 12; in case # classes changes
+  head(IV)
   IV$rel_ba = rowSums(IV[,ba_cols], na.rm = T)/IV$tot_ba_cm2
   IV$rel_dens = rowSums(IV[,count_cols], na.rm = T)/IV$tot_stems
   IV[,c("rel_class_freq", "rel_ba", "rel_dens")][is.na(IV[,c("rel_class_freq", "rel_ba", "rel_dens")])] <- 0
@@ -703,8 +722,8 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   # ** If no or only a few woody stems >1m tall in sample plot or if stems per ha <10, score metric as 0.
 
   subcan_IV1 <- IV |>
-    filter(DomVeg_Lev1 %in% c("forest", "shrub")) |>
-    filter(!(DomVeg_Lev2 %in% "Bog Shrub Swamp")) |>
+    #filter(DomVeg_Lev1 %in% c("forest", "shrub")) |>
+    #filter(!(DomVeg_Lev2 %in% "Bog Shrub Swamp")) |>
     filter(OH_STATUS == "native") |>
     filter(SHADE %in% c("partial", "shade")) |>
     filter(FORM %in% c("shrub", "sm tree")) |>
@@ -729,16 +748,17 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
 
   # Add 0s where no subcanopy trees were found in forest
   subcan_IV <- left_join(woody_lj, subcan_IV1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo", "DomVeg_Lev1"))
-  subcan_IV$SubcanIV[is.na(subcan_IV$SubcanIV) & subcan_IV$DomVeg_Lev1 %in% c("shrub", "forest")] <- 0
-  subcan_IV$SubcanIV_Score[subcan_IV$SubcanIV == 0 & subcan_IV$DomVeg_Lev1 %in% c("shrub", "forest")] <- 0
+  subcan_IV$SubcanIV[is.na(subcan_IV$SubcanIV)] <- 0
+  subcan_IV$SubcanIV_Score[subcan_IV$SubcanIV == 0] <- 0
+  subcan_IV$SubcanIV_Score[subcan_IV$DomVeg_Lev1 == "emergent"] <- NA
+  subcan_IV$SubcanIV_Score[subcan_IV$DomVeg_Lev2 == "Bog Shrub Swamp"] <- NA
 
 
   canopy_IV1 <- IV |>
-    filter(DomVeg_Lev1 %in% c("forest")) |>
+    #filter(DomVeg_Lev1 %in% c("forest")) |>
     filter(OH_STATUS == "native") |>
     filter(FORM %in% c("tree")) |>
-    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear,
-             ModuleNo, DomVeg_Lev1) |>
+    group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1) |>
     summarize(CanopyIV_num = sum(IV),
               CanopyIV_den = sum(IV > 0), # sums a logical statement, so gives count
               CanopyIV = CanopyIV_num/CanopyIV_den,
@@ -752,8 +772,9 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
 
   # Add 0s where no canopy trees were found in forest
   canopy_IV <- left_join(woody_lj, canopy_IV1, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo", "DomVeg_Lev1"))
-  canopy_IV$CanopyIV[is.na(canopy_IV$CanopyIV) & canopy_IV$DomVeg_Lev1 == "forest"] <- 0
-  canopy_IV$CanopyIV_Score[canopy_IV$CanopyIV == 0 & canopy_IV$DomVeg_Lev1 == "forest"] <- 0
+  canopy_IV$CanopyIV[is.na(canopy_IV$CanopyIV)] <- 0
+  canopy_IV$CanopyIV_Score[canopy_IV$CanopyIV == 0] <- 0
+  canopy_IV$CanopyIV_Score[!canopy_IV$DomVeg_Lev1 %in% "forest"] <- NA
 
 
   # % Unvegetated
@@ -767,7 +788,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   #---- Compile Biomass Metrics ----
   # Assumes area sampled is always 0.01m2 to get grams/m2
   bmass1 <- getBiomass(years = years, survey_type = survey_type, hgm_class = hgm_class,
-                      dom_veg1 = dom_veg1, plotID = plotID)
+                      dom_veg1 = dom_veg1, plotID = plotID, intens_mods = intens_mods)
 
   bmass <- bmass1 |>
            filter(DomVeg_Lev1 == "emergent") |>
@@ -807,7 +828,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   # Removed EventID, SampleDate, from list, because not identical across herb, woody, biomass data
   vibi_list <- list(
     carex |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Carex, Carex_Score),
-    #cyper |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Cyper, Cyper_Score),
+    cyper |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Cyper, Cyper_Score),
     dicot |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Dicot, Dicot_Score),
     shade |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Shade, Shade_Score),
     shrub_reg |> select(LocationID, FeatureID, SampleYear, ModuleNo, Num_Shrub_reg, Shrub_Score_reg),
@@ -837,13 +858,13 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
 
   #names(vibi_comb2)[grepl("Score", names(vibi_comb2))]
 
-  score_reg_cols <- c("Carex_Score", #"Cyper_Score",
+  score_reg_cols <- c("Carex_Score", "Cyper_Score",
                       "Dicot_Score", "Shade_Score",
                      "Shrub_Score_reg", "Hydro_Score_reg", "SVP_Score", "AP_Score", "FQAI_Score",
                      "PctBryo_Score", "PctHydro_Score_reg", "PctSens_Score", "PctTol_Score", "PctInvGram_Score",
                      "SmTree_Score", "SubcanIV_Score", "CanopyIV_Score", "Biomass_Score")
 
-  score_state_cols <- c("Carex_Score", #"Cyper_Score",
+  score_state_cols <- c("Carex_Score", "Cyper_Score",
                         "Dicot_Score", "Shade_Score",
                         "Shrub_Score", "Hydro_Score", "SVP_Score", "AP_Score", "FQAI_Score",
                         "PctBryo_Score", "PctHydro_Score", "PctSens_Score", "PctTol_Score", "PctInvGram_Score",

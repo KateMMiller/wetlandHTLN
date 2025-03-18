@@ -60,6 +60,11 @@ importData()
 # calculate module-level VIBI for all sites (default).
 vibi <- joinVIBI_module()
 
+write.csv(vibi, "./testing_scripts/vibimodule.csv", row.names=F)
+
+# calculate module-level VIBI for plot 124 and year 2023
+vibi124 <- joinVIBI_module(plotID = "124", years = 2023)
+
 # calculate module-level VIBI for all sites sampled in 2023
 vibi23 <- joinVIBI_module(years = 2023)
 
@@ -67,8 +72,9 @@ vibi23 <- joinVIBI_module(years = 2023)
 vibi_emerg <- joinVIBI_module(dom_veg1 = "emergent")
 
 # calculate module-level VIBI for depressional wetlands
-
 vibi_dep <- joinVIBI_module(hgm_class = "Depression")
+
+# calculate
 
 
 }
