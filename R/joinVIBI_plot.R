@@ -985,13 +985,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   head(vibi_comb3)
 
   #---- Informational Parameters ----
-  # % buttonbush
-  pct_button <- herbs |> filter(ScientificName %in% "Cephalanthus occidentalis") |>
-    group_by(LocationID, FeatureID, SampleYear) |>
-    summarize(pct_button = sum(rel_cov, na.rm = T), .groups = 'drop')
-  # if 0, retuns no rows. Might want to change this...
-
-  # tree stems
+  # tree stems per ha
   trees_per_ha <- woody |> filter(OH_STATUS == "native" & FORM == "tree") |> # spreadsheet didn't include sm tree
     group_by(LocationID, FeatureID, SampleYear, AreaHA) |>
     summarize(tree_stems = sum(Count),
@@ -999,6 +993,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
               .groups = 'drop') |>
     select(-AreaHA)
 
+  # shrub stems per ha
   shrubs_per_ha <- woody |> filter(OH_STATUS == "native" & FORM == "shrub") |> # spreadsheet didn't include sm tree
     group_by(LocationID, FeatureID, SampleYear, AreaHA) |>
     summarize(shrub_stems = sum(Count),
@@ -1006,26 +1001,36 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
               .groups = 'drop') |>
     select(-AreaHA)
 
-  pct_nat_hydro <- herbs |> filter(OH_STATUS == "native" & WETreg %in% wet) |> # spreadsheet uses region wetland indicator
+  # % buttonbush
+  pct_button <- herbs |> filter(ScientificName %in% "Cephalanthus occidentalis") |>
+    group_by(LocationID, FeatureID, SampleYear) |>
+    summarize(pct_button = sum(rel_cov, na.rm = T), .groups = 'drop')
+
+  # % native perennial hydrophytes
+  pct_nat_hydro <- herbs |> filter(OH_STATUS == "native" & WETreg %in% wet & HABIT %in% c("W", "PE")) |> # spreadsheet uses region wetland indicator
     group_by(LocationID, FeatureID, SampleYear) |>
     summarize(pct_nat_hydro = sum(rel_cov, na.rm = T),
               .groups = 'drop')
 
+  # % native perennials
   pct_nat_peren <- herbs |> filter(OH_STATUS == "native" & HABIT %in% c("W", "PE")) |>
     group_by(LocationID, FeatureID, SampleYear) |>
     summarize(pct_native = sum(rel_cov, na.rm = T),
               .groups = 'drop')
 
+  # % perennial
   pct_peren <- herbs |> filter(HABIT %in% c("W", "PE")) |>
     group_by(LocationID, FeatureID, SampleYear) |>
     summarize(pct_peren = sum(rel_cov, na.rm = T),
               .groups = 'drop')
 
+  # % aventives
   pct_advent <- herbs |> filter(OH_STATUS %in% c("adventive", "cryptogenic")) |>
     group_by(LocationID, FeatureID, SampleYear) |>
     summarize(pct_advent = sum(rel_cov, na.rm = T),
               .groups = 'drop')
 
+  # Wetness Index
   wet_index <- herbs |> # spreadsheet uses reg wetland indicator
     group_by(LocationID, FeatureID, SampleYear) |>
     summarize(wet_index = sum(wet_rel_cov, na.rm = T),
