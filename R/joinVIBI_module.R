@@ -454,7 +454,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     summarize(Pct_Hydro_reg = sum(rel_cov, na.rm = T),
               .groups = 'drop') |>
     mutate(Pct_Hydro_Score_reg = case_when(is.na(Pct_Hydro_reg) ~ NA_real_,
-                                          tot_cov < 10 ~ 0, # first case
+                                          tot_cov < 0.10 ~ 0, # first case
                                           Pct_Hydro_reg <= 0.1 ~ 0,
                                           Pct_Hydro_reg > 0.1 & Pct_Hydro_reg <= 0.15 ~ 3,
                                           Pct_Hydro_reg > 0.15 & Pct_Hydro_reg <= 0.28 ~ 7,
