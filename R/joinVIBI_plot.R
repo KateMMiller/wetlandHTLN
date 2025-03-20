@@ -94,11 +94,14 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
                      dom_veg1 = dom_veg1, plotID = plotID, nativity = 'all', intens_mods = 4)
 
   if(nrow(herbs1) == 0){stop(
-    "The combination of function arguments returned an empty data frame. Check that the combination of plotID and years have survey records.")}
+    paste0(
+    "The combination of function arguments returned an empty data frame.",
+    " Check that the combination of plotID and years have survey records, and that the plots you chose have 4 InternMods.")
+    )}
 
   # Set wet status based on the column chosen, like in the macros code. Note that the macros
   # code only replaces blanks in the ACOE regional columns for OBL, FACW, FACU, FAC, and UPL.
-  # Codes not replaces are: (FAC), (FACU-), (FACU), (FACU+), (FACW), (UPL), FAC+, FACU-, FACW+
+  # Codes not replaced are: (FAC), (FACU-), (FACU), (FACU+), (FACW), (UPL), FAC+, FACU-, FACW+
   # The spreadsheet then pattern matches FACW with * * wildcards to bring in () and +/-
   # in the calculation for statewide metric scores, but that won't work for blank regional
   # scores.
@@ -124,7 +127,10 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
 
   if(nrow(mult_evs) > 0){
     warning(paste0("There are ", nrow(mult_evs), " sites with multiple dates and EventIDs within a year for VIBI Herbs. ",
-                   "Using the first chronological date and EventID."))
+                   "Using the first chronological date and EventID. Affected FeatureIDs/EventIDs: ",
+                   "\n",
+                   paste0(mult_evs[,c("FeatureID", "EventID")], collapse = "\n")))
+
     for(i in seq_along(1:nrow(mult_evs))){
     row = mult_evs[i,]
     herbs1$EventID[herbs1$LocationID == row$LocationID &
@@ -706,8 +712,11 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
     filter(num_evs > 1)
 
   if(nrow(mult_evs_w)>0){
-    warning(paste0("There are ", nrow(mult_evs_w), " sites with multiple dates and EventIDs within a year for VIBI Woody. ",
-                   "Using the first chronological date and EventID."))
+    warning(paste0("There are ", nrow(mult_evs_w), " sites with multiple dates and EventIDs within a year for VIBI Herbs. ",
+                   "Using the first chronological date and EventID. Affected FeatureIDs/EventIDs: ",
+                   "\n",
+                   paste0(mult_evs_w[,c("FeatureID", "EventID")], collapse = "\n")))
+
     for(i in seq_along(1:nrow(mult_evs_w))){
       row = mult_evs_w[i,]
       woody$EventID[woody$LocationID == row$LocationID &
@@ -901,8 +910,11 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
     filter(num_evs > 1)
 
   if(nrow(mult_evs_b) > 0){
-    warning(paste0("There are ", nrow(mult_evs_b), " sites with multiple dates and EventIDs within a year for VIBI Biomass. ",
-                   "Using the first chronological date and EventID."))
+    warning(paste0("There are ", nrow(mult_evs_b), " sites with multiple dates and EventIDs within a year for VIBI Herbs. ",
+                   "Using the first chronological date and EventID. Affected FeatureIDs/EventIDs: ",
+                   "\n",
+                   paste0(mult_evs_b[,c("FeatureID", "EventID")], collapse = "\n")))
+
     for(i in seq_along(1:nrow(mult_evs_b))){
       row = mult_evs_b[i,]
       bmass$EventID[bmass$LocationID == row$LocationID &
