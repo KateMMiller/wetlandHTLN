@@ -870,7 +870,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
 
   bmass <- bmass1 |>
            filter(DomVeg_Lev1 == "emergent") |>
-           mutate(weight_g_m2 = DryWt/0.01) |>
+           mutate(weight_g_m2 = DryWt/0.1) |>
            group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, TotalMods, AreaHA, DomVeg_Lev1) |>
            summarize(num_bmass_samp = sum(!is.na(DryWt)),
                      Avg_Bmass = sum(weight_g_m2)/num_bmass_samp,
@@ -961,13 +961,35 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
     data.frame()
 
   vibi_comb2$Avg_Plot_Cover <- vibi_comb2$tot_cov / 4 # Only allowing sites with 4 intense modules
-  head(vibi_comb2)
+
+  vibi_score_cols <- c("Carex_Score", "Cyper_Score", "Dicot_Score", "Shade_Score",
+                       "Shrub_Score", "Hydro_Score", "SVP_Score", "AP_Score", "FQAI_Score",
+                       "Pct_Bryo_Score", "Pct_Hydro_Score", "Pct_Sens_Score", "Pct_Tol_Score",
+                       "Pct_InvGram_Score", "SmTree_Score", "SubcanIV_Score",
+                       "CanopyIV_Score", "Biomass_Score")
+
+  vibi_score_reg_cols <- c("Carex_Score", "Cyper_Score", "Dicot_Score", "Shade_Score",
+                          "Shrub_Score_reg", "Hydro_Score_reg", "SVP_Score", "AP_Score", "FQAI_Score",
+                          "Pct_Bryo_Score", "Pct_Hydro_Score_reg", "Pct_Sens_Score", "Pct_Tol_Score",
+                          "Pct_InvGram_Score", "SmTree_Score", "SubcanIV_Score",
+                          "CanopyIV_Score", "Biomass_Score")
+
+  vibi_fq_scores <- c("FQAI_Score_FQ", "Cov_Wt_C_Score_FQ")
+
+  vibi_comb3 <- left_join(plots_abbr, vibi_comb2, by = c("LocationID", "FeatureID", "DomVeg_Lev1"))
+
+  vibi_comb3$VIBI_Score_State <- rowSums(vibi_comb3[,vibi_score_cols], na.rm = T)
+  vibi_comb3$VIBI_Score_ACOEReg <- rowSums(vibi_comb3[,vibi_score_reg_cols], na.rm = T)
+  vibi_comb3$VIBI_Score_FQ <- rowSums(vibi_comb3[,vibi_fq_scores], na.rm = T)
+
+  head(vibi_comb3)
 
   #---- Informational Parameters ----
   # % buttonbush
   pct_button <- herbs |> filter(ScientificName %in% "Cephalanthus occidentalis") |>
     group_by(LocationID, FeatureID, SampleYear) |>
     summarize(pct_button = sum(rel_cov, na.rm = T), .groups = 'drop')
+  # if 0, retuns no rows. Might want to change this...
 
   # tree stems
   trees_per_ha <- woody |> filter(OH_STATUS == "native" & FORM == "tree") |> # spreadsheet didn't include sm tree
@@ -989,7 +1011,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
     summarize(pct_nat_hydro = sum(rel_cov, na.rm = T),
               .groups = 'drop')
 
-  pct_native <- herbs |> filter(OH_STATUS == "native") |>
+  pct_nat_peren <- herbs |> filter(OH_STATUS == "native" & HABIT %in% c("W", "PE")) |>
     group_by(LocationID, FeatureID, SampleYear) |>
     summarize(pct_native = sum(rel_cov, na.rm = T),
               .groups = 'drop')
@@ -1009,15 +1031,18 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
     summarize(wet_index = sum(wet_rel_cov, na.rm = T),
               .groups = 'drop')
 
- info_list <- list(pct_button, trees_per_ha, shrubs_per_ha, pct_nat_hydro, pct_native, pct_peren, pct_advent, wet_index)
+ info_list <- list(pct_button, trees_per_ha, shrubs_per_ha, pct_nat_hydro, pct_nat_peren, pct_peren, pct_advent, wet_index)
 
  info_comb <- purrr::reduce(info_list, full_join, by = c("LocationID", "FeatureID", "SampleYear"))
 
  info_comb2 <- left_join(full_evs, info_comb, by = c("LocationID", "FeatureID", "SampleYear")) |>
    data.frame()
 
-  head(data.frame(info_comb2))
+  #head(data.frame(info_comb2))
   #names(vibi_comb2)[grepl("Score", names(vibi_comb2))]
+
+
+
 
   vibi_cols <- c("Num_Carex", "Carex_Score", "Num_Cyper", "Cyper_Score", "Num_Dicot", "Dicot_Score",
                  "Num_Shade", "Shade_Score", "Num_Shrub", "Shrub_Score", "Num_Shrub_reg", "Shrub_Score_reg",
@@ -1030,21 +1055,13 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
                  "Avg_Bmass", "Biomass_Score", "VIBI_Score_State", "VIBI_Score_ACOEReg", "VIBI_Score_FQ",
                  "Avg_Plot_Cover")
 
-  inform_cols <- c("trees_per_ha", "shrubs_per_ha", "pct_button", "pct_nat_hydro", "pct_native",
+  inform_cols <- c("trees_per_ha", "shrubs_per_ha", "pct_button", "pct_nat_hydro", "pct_nat_peren",
                    "pct_adventives", "pct_water", "pct_unveg", "pct_bare", "wet_index")
 
   site_cols <- c("LocationID", "FeatureTypes", "FeatureID", "Park", "County", "TotalMods", "InternMods",
                  "PlotConfig", "AreaHA", "SampleYear", "SampleDate",
                  "DomVeg_Lev1", "DomVeg_Lev2", "DomVeg_Lev3",
                  "X1oPlants", "X2oPlants", "X1oHGM", "HGMClass")
-
-  comb_dat <- left_join(plots_abbr, vibi_comb2, by = c("LocationID", "FeatureID", "DomVeg_Lev1"))
-
-  comb_dat$VIBI_Score_ACOEReg <- rowSums(comb_dat[,score_reg_cols], na.rm = T)
-  comb_dat$VIBI_Score_State <- rowSums(comb_dat[,score_state_cols], na.rm = T)
-  comb_dat$VIBI_Score_FQ <- rowSums(comb_dat[,vibi_fq_cols], na.rm = T)
-
-  comb_dat2 <- comb_dat[, c(names(plots_abbr), )]
   final_dat <- final_dat |> arrange(FeatureID, SampleYear)
 
   # write.csv(final_dat |> select(-Park, -County, -PlotConfig, -AreaHA, -(X1oPlants:HGMClass),
