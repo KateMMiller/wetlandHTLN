@@ -2,7 +2,6 @@
 #'
 #' @importFrom dplyr arrange between case_when filter first full_join group_by left_join mutate select summarize
 #' @importFrom tidyr pivot_wider
-#' @importFrom tidyselect starts_with
 #' @importFrom purrr reduce
 #'
 #' @description This function summarizes plot-level VIBI and filters by plot, year, and plot types.
@@ -94,7 +93,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
                      dom_veg1 = dom_veg1, plotID = plotID, nativity = 'all', intens_mods = 4)
 
   if(nrow(herbs1) == 0){stop(
-    "The combination of function arguements returned an empty data frame. Check that the combination of plotID and years have survey records.")}
+    "The combination of function arguments returned an empty data frame. Check that the combination of plotID and years have survey records.")}
 
   # Set wet status based on the column chosen, like in the macros code. Note that the macros
   # code only replaces blanks in the ACOE regional columns for OBL, FACW, FACU, FAC, and UPL.
@@ -110,6 +109,31 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
 
   # Extract genus from scientific name
   herbs1$genus <- gsub("([A-Za-z]+).*", "\\1", herbs1$ScientificName)
+
+  # Until this is fixed in the database, handling multiple dates/eventIDs for the same
+  # sample period by taking the first.
+  # find years with multiple eventIDs in a given site
+  mult_evs <- herbs1 %>% select(LocationID, FeatureID, SampleYear, EventID, SampleDate) |>  unique() |>
+    group_by(LocationID, FeatureID, SampleYear) |>
+    summarize(num_evs = sum(!is.na(EventID)),
+              EventID = first(EventID),
+              SampleDate = first(SampleDate),
+              .groups = 'drop') |>
+    filter(num_evs > 1)
+
+  if(nrow(mult_evs)>0){
+    for(i in seq_along(1:nrow(mult_evs))){
+    row = mult_evs[i,]
+    herbs1$EventID[herbs1$LocationID == row$LocationID &
+                     herbs1$FeatureID == row$FeatureID &
+                       herbs1$SampleYear == row$SampleYear] <- row$EventID
+
+    herbs1$SampleDate[herbs1$LocationID == row$LocationID &
+                       herbs1$FeatureID == row$FeatureID &
+                         herbs1$SampleYear == row$SampleYear] <- row$SampleDate
+
+    }
+  }
 
   # Calc Relative Cover
   herbs_rc <- herbs1 |>
@@ -144,7 +168,9 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
                              WETreg == "UPL" ~ 0,
                              TRUE ~ 0),
       wet_rel_cov = rel_cov * wet_wt,
-      wet_rel_cov_reg = rel_cov * wet_wt_reg)
+      wet_rel_cov_reg = rel_cov * wet_wt_reg) %>%
+    data.frame()
+
 
   # Create list of wet indicators from tluSpp
   wet <- unique(tluSpp$WET[grepl("OBL|FACW", tluSpp$WET)])
@@ -666,6 +692,31 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
     filter(!is.na(Count)) # dropping FeatureID 305 from 2015 for Mod 3 Carya ovata C5 with -9999.
     # It's also a duplicate record, as there's a Carya ovata in the same size class with a count in Mod 3.
 
+  # Until this is fixed in the database, handling multiple dates/eventIDs for the same
+  # sample period by taking the first.
+  # find years with multiple eventIDs in a given site
+  mult_evs_w <- woody %>% select(LocationID, FeatureID, SampleYear, EventID, SampleDate) |>  unique() |>
+    group_by(LocationID, FeatureID, SampleYear) |>
+    summarize(num_evs = sum(!is.na(EventID)),
+              EventID = first(EventID),
+              SampleDate = first(SampleDate),
+              .groups = 'drop') |>
+    filter(num_evs > 1)
+
+  if(nrow(mult_evs_w)>0){
+    for(i in seq_along(1:nrow(mult_evs_w))){
+      row = mult_evs_w[i,]
+      woody$EventID[woody$LocationID == row$LocationID &
+                       woody$FeatureID == row$FeatureID &
+                       woody$SampleYear == row$SampleYear] <- row$EventID
+
+      woody$SampleDate[woody$LocationID == row$LocationID &
+                          woody$FeatureID == row$FeatureID &
+                          woody$SampleYear == row$SampleYear] <- row$SampleDate
+
+    }
+  }
+
   # Create table to left_join with herb vibi metrics; There are no sample qualifiers for sampled, but non present
   # So assuming if there's a record in this df below, and the community matches, the VIBI should be 0 for woody vibis
   woody_lj <- woody |> select(LocationID, FeatureID, DomVeg_Lev1, SampleYear) |> unique()
@@ -832,6 +883,32 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
                                             Avg_Bmass < 100 ~ 0,
                                             TRUE ~ NA_real_
                                             ))
+
+  # Until this is fixed in the database, handling multiple dates/eventIDs for the same
+  # sample period by taking the first.
+
+  # find years with multiple eventIDs in a given site
+  mult_evs_b <-bmass %>% select(LocationID, FeatureID, SampleYear, EventID, SampleDate) |>  unique() |>
+    group_by(LocationID, FeatureID, SampleYear) |>
+    summarize(num_evs = sum(!is.na(EventID)),
+              EventID = first(EventID),
+              SampleDate = first(SampleDate),
+              .groups = 'drop') |>
+    filter(num_evs > 1)
+
+  if(nrow(mult_evs_b)>0){
+    for(i in seq_along(1:nrow(mult_evs))){
+      row = mult_evs_b[i,]
+      bmass$EventID[bmass$LocationID == row$LocationID &
+                       bmass$FeatureID == row$FeatureID &
+                       bmass$SampleYear == row$SampleYear] <- row$EventID
+
+      bmass$SampleDate[bmass$LocationID == row$LocationID &
+                          bmass$FeatureID == row$FeatureID &
+                          bmass$SampleYear == row$SampleYear] <- row$SampleDate
+
+    }
+  }
 
   # Not adding 0s for Biomass, because not every module is sampled for biomass every year.
   # I don't have a way to logically changes 0s to NA
