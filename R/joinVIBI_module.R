@@ -1012,7 +1012,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
 
   vibi_comb2 <- left_join(full_evs, vibi_comb, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
 
-  vibi_comb2$Avg_Plot_Cover <- vibi_comb2$tot_cov / 4 # Only allowing sites with 4 intense modules
+  vibi_comb2$Avg_Plot_Cover <- vibi_comb2$tot_cov #/ 4 # Only allowing sites with 4 intense modules
 
   vibi_score_cols <- c("Carex_Score", "Cyper_Score", "Dicot_Score", "Shade_Score",
                        "Shrub_Score", "Hydro_Score", "SVP_Score", "AP_Score", "FQAI_Score",
