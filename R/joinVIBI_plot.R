@@ -129,7 +129,10 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
     warning(paste0("There are ", nrow(mult_evs), " sites with multiple dates and EventIDs within a year for VIBI Herbs. ",
                    "Using the first chronological date and EventID. Affected FeatureIDs/EventIDs: ",
                    "\n",
-                   paste0(mult_evs[,c("FeatureID", "EventID")], collapse = "\n")))
+                   paste0("LocationID: ", mult_evs[, 1], " ",
+                          "FeatureID: ", mult_evs[, 2], " ",
+                          "SampleYear: ", mult_evs[, 3],
+                          collapse = "\n ")))
 
     for(i in seq_along(1:nrow(mult_evs))){
     row = mult_evs[i,]
@@ -713,7 +716,10 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
     warning(paste0("There are ", nrow(mult_evs_w), " sites with multiple dates and EventIDs within a year for VIBI Herbs. ",
                    "Using the first chronological date and EventID. Affected FeatureIDs/EventIDs: ",
                    "\n",
-                   paste0(mult_evs_w[,c("FeatureID", "EventID")], collapse = "\n")))
+                   paste0("LocationID: ", mult_evs_w[, 1], " ",
+                          "FeatureID: ", mult_evs_w[, 2], " ",
+                          "SampleYear: ", mult_evs_w[, 3],
+                          collapse = "\n ")))
 
     for(i in seq_along(1:nrow(mult_evs_w))){
       row = mult_evs_w[i,]
@@ -910,7 +916,10 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
     warning(paste0("There are ", nrow(mult_evs_b), " sites with multiple dates and EventIDs within a year for VIBI Herbs. ",
                    "Using the first chronological date and EventID. Affected FeatureIDs/EventIDs: ",
                    "\n",
-                   paste0(mult_evs_b[,c("FeatureID", "EventID")], collapse = "\n")))
+                   paste0("LocationID: ", mult_evs_b[, 1], " ",
+                          "FeatureID: ", mult_evs_b[, 2], " ",
+                          "SampleYear: ", mult_evs_b[, 3],
+                          collapse = "\n ")))
 
     for(i in seq_along(1:nrow(mult_evs_b))){
       row = mult_evs_b[i,]

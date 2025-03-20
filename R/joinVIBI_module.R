@@ -90,11 +90,30 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   plots <- getPlots(plot_type = "VIBIplotID", survey_type = survey_type, hgm_class = hgm_class,
                     dom_veg1 = dom_veg1, plotID = plotID, intens_mods = intens_mods)
 
+  plots$ModArea <- as.numeric(plots$AreaHA)/plots$TotalMods
+
+  # Add check for module areas != 0.01 for the fix with FeatureID 192
+  area_check <- plots[plots$ModArea != 0.01, c("LocationID", "FeatureID", "TotalMods", "PlotConfig", "AreaHA", "ModArea")]
+
+  if(nrow(area_check) > 0){
+    warning(paste0("The following plots have TotalMods/AreaHA that does not equal 0.01ha. ",
+                   "If this is an error density-related metrics will not be correctly calculated: ",
+                   "\n",
+            paste("LocationID: ", area_check[, 1], " ",
+                   "FeatureID: ", area_check[, 2], " ",
+                   "TotalMods: ", area_check[, 3], " ",
+                   "PlotConfig: ", area_check[, 4], " ",
+                   "AreaHA: ", area_check[, 5], " ",
+                   "ModArea: ", round(area_check[, 6], 4),
+                   collapse = "\n ")
+                   ))
+  }
+
   tryCatch(tluSpp <- get("tluSpp", envir = env),
            error = function(e){stop("tlu_WetlndSpeciesList not found. Please run importData() first.")})
 
   # Compile the loc/visit table to left-join with final results
-  plots_abbr <- plots[,c("LocationID", "FeatureTypes", "FeatureID", "Park", "County", "TotalMods", "PlotConfig", "AreaHA",
+  plots_abbr <- plots[,c("LocationID", "FeatureTypes", "FeatureID", "Park", "County", "TotalMods", "PlotConfig", "AreaHA", "ModArea",
                          "X1oPlants", "X2oVegID", "X1oHGM", "DomVegID", "HGM_ID", "HGMClass",
                          "DomVeg_Lev1", "DomVeg_Lev2", "DomVeg_Lev3")]
 
@@ -137,7 +156,11 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     warning(paste0("There are ", nrow(mult_evs), " sites with multiple dates and EventIDs within a year for VIBI Herbs. ",
                    "Using the first chronological date and EventID. Affected FeatureIDs/EventIDs: ",
                    "\n",
-                   paste0(mult_evs[,c("FeatureID", "EventID")], collapse = "\n")))
+                   paste0("LocationID: ", mult_evs[, 1], " ",
+                         "FeatureID: ", mult_evs[, 2], " ",
+                         "SampleYear: ", mult_evs[, 3],
+                         collapse = "\n "))
+            )
 
     for(i in seq_along(1:nrow(mult_evs))){
       row = mult_evs[i,]
@@ -533,13 +556,13 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   pct_hydro1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, ModuleNo, ScientificName,
            OH_STATUS, SHADE, WET, tot_cov, rel_cov) |>
-    filter(OH_STATUS == "native" & WETreg %in% wet ) |> # &
+    filter(OH_STATUS == "native" & WET %in% wet ) |> # &
     #      #SHADE %in% c("partial", "shade")) |> # VIBI spreadsheet doesn't filter on SHADE
     #filter(DomVeg_Lev1 %in% c("forest")) |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, tot_cov, ModuleNo, ScientificName) |>
     summarize(rel_cov = sum(rel_cov), .groups = 'drop') |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, ModuleNo, tot_cov) |>
-    summarize(Pct_Hydro_reg = sum(rel_cov), .groups = 'drop') |>
+    summarize(Pct_Hydro = sum(rel_cov), .groups = 'drop') |>
     mutate(Pct_Hydro_Score = case_when(is.na(Pct_Hydro) ~ NA_real_,
                                            tot_cov < 0.10 ~ 0, # first case
                                            Pct_Hydro <= 0.10 ~ 0,
@@ -664,6 +687,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   woody1$WETreg <- ifelse(is.na(woody1[,region]), woody1$WET, woody1[,region])
   woody1$WETreg <- ifelse(is.na(woody1$WETreg), "ND", woody1$WETreg)
   woody1$AreaHA <- as.numeric(woody1$AreaHA)
+  woody1$ModArea <- woody1$AreaHA/woody1$TotalMods
   woody2 <- woody1 |> filter(!DiamID %in% "BIG")
 
   bigt1 <- getBigTrees(years = years, survey_type = survey_type, hgm_class = hgm_class,
@@ -674,9 +698,10 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   bigt1$WETreg <- ifelse(is.na(bigt1[,region]), bigt1$WET, bigt1[,region])
   bigt1$WETreg <- ifelse(is.na(bigt1$WETreg), "ND", bigt1$WETreg)
   bigt1$AreaHA <- as.numeric(bigt1$AreaHA)
+  bigt1$ModArea <- bigt1$AreaHA/bigt1$TotalMods
 
   bigt <- bigt1 |> group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear,
-                            ModuleNo, AreaHA, DomVeg_Lev1, DomVeg_Lev2, OH_STATUS,
+                            ModuleNo, AreaHA, ModArea, DomVeg_Lev1, DomVeg_Lev2, OH_STATUS,
                             SHADE, FORM, WET, WETreg,
                             ScientificName) |>
     summarize(BIG_BA = sum(BIG_ba_cm2, na.rm = T),
@@ -686,11 +711,11 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
               .groups = 'drop')
 
   woody_comb <- rbind(woody2 |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear,
-                                       ModuleNo, AreaHA, DomVeg_Lev1, DomVeg_Lev2, OH_STATUS, SHADE, FORM,
+                                       ModuleNo, AreaHA, ModArea, DomVeg_Lev1, DomVeg_Lev2, OH_STATUS, SHADE, FORM,
                                        # WET, WETreg, # don't need b/c covered by first filter
                                        DiamID, DiamVal, ScientificName, Count, ba_cm2),
                       bigt |> select(LocationID, FeatureID, EventID, SampleDate, SampleYear,
-                                     ModuleNo, AreaHA, DomVeg_Lev1, DomVeg_Lev2, OH_STATUS, SHADE, FORM,
+                                     ModuleNo, AreaHA, ModArea, DomVeg_Lev1, DomVeg_Lev2, OH_STATUS, SHADE, FORM,
                                      # WET, WETreg, # don't need b/c covered by first filter
                                      DiamID, DiamVal, ScientificName, Count = BIG_Count,
                                      ba_cm2 = BIG_BA))
@@ -699,7 +724,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   woody_rc <- woody_comb |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, ModuleNo, DomVeg_Lev1) |>
     summarize(tot_stems = sum(Count, na.rm = T),
-              tot_stems_per_ha = tot_stems/first(AreaHA),
+              tot_stems_per_ha = tot_stems/first(ModArea),
               tot_ba_cm2 = sum(ba_cm2, na.rm = T),
               .groups = 'drop')
 
@@ -724,7 +749,10 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     warning(paste0("There are ", nrow(mult_evs_w), " sites with multiple dates and EventIDs within a year for VIBI Herbs. ",
                    "Using the first chronological date and EventID. Affected FeatureIDs/EventIDs: ",
                    "\n",
-                   paste0(mult_evs_w[,c("FeatureID", "EventID")], collapse = "\n")))
+                   paste0("LocationID: ", mult_evs_w[, 1], " ",
+                          "FeatureID: ", mult_evs_w[, 2], " ",
+                          "SampleYear: ", mult_evs_w[, 3],
+                          collapse = "\n ")))
 
     for(i in seq_along(1:nrow(mult_evs_w))){
       row = mult_evs_w[i,]
@@ -920,7 +948,10 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     warning(paste0("There are ", nrow(mult_evs_b), " sites with multiple dates and EventIDs within a year for VIBI Herbs. ",
                    "Using the first chronological date and EventID. Affected FeatureIDs/EventIDs: ",
                    "\n",
-                   paste0(mult_evs_b[,c("FeatureID", "EventID")], collapse = "\n")))
+                   paste0("LocationID: ", mult_evs_b[, 1], " ",
+                          "FeatureID: ", mult_evs_b[, 2], " ",
+                          "SampleYear: ", mult_evs_b[, 3],
+                          collapse = "\n ")))
 
     for(i in seq_along(1:nrow(mult_evs_b))){
       row = mult_evs_b[i,]
@@ -965,7 +996,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     FQAI |> select(LocationID, FeatureID, SampleYear, ModuleNo, NumSpp, FQAI, FQAI_Score, FQAI_Score_FQ),
     CovWt_CofC |> select(LocationID, FeatureID, SampleYear, ModuleNo, tot_cov, cov_wt_C, Cov_Wt_C_Score_FQ),
     pct_bryo |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Bryo, Pct_Bryo_Score),
-    pct_hydro_reg |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Hydro_reg, PctHydro_Score_reg),
+    pct_hydro_reg |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Hydro_reg, Pct_Hydro_Score_reg),
     pct_hydro |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Hydro, Pct_Hydro_Score),
     pct_sens |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Sens, Pct_Sens_Score),
     pct_tol |> select(LocationID, FeatureID, SampleYear, ModuleNo, Pct_Tol, Pct_Tol_Score),
@@ -1003,4 +1034,113 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   vibi_comb3$VIBI_Score_ACOEReg <- rowSums(vibi_comb3[,vibi_score_reg_cols], na.rm = T)
   vibi_comb3$VIBI_Score_FQ <- rowSums(vibi_comb3[,vibi_fq_scores], na.rm = T)
 
+  #---- Informational Parameters ----
+  # tree stems per ha
+  trees_per_ha <- woody |> filter(OH_STATUS == "native" & FORM == "tree") |> # spreadsheet didn't include sm tree
+    group_by(LocationID, FeatureID, SampleYear, ModArea, ModuleNo) |>
+    summarize(tree_stems = sum(Count),
+              trees_per_ha = tree_stems / first(ModArea),
+              .groups = 'drop') |>
+    select(-ModArea)
+
+  # shrub stems per ha
+  shrubs_per_ha <- woody |> filter(OH_STATUS == "native" & FORM == "shrub") |> # spreadsheet didn't include sm tree
+    group_by(LocationID, FeatureID, SampleYear, ModArea, ModuleNo) |>
+    summarize(shrub_stems = sum(Count),
+              shrubs_per_ha = shrub_stems / first(ModArea),
+              .groups = 'drop') |>
+    select(-ModArea)
+
+  # % buttonbush
+  pct_button <- herbs |> filter(ScientificName %in% "Cephalanthus occidentalis") |>
+    group_by(LocationID, FeatureID, SampleYear, ModuleNo) |>
+    summarize(pct_button = sum(rel_cov, na.rm = T), .groups = 'drop')
+
+  # % native perennial hydrophytes
+  pct_nat_hydro <- herbs |> filter(OH_STATUS == "native" & WETreg %in% wet & HABIT %in% c("W", "PE")) |> # spreadsheet uses region wetland indicator
+    group_by(LocationID, FeatureID, SampleYear, ModuleNo) |>
+    summarize(pct_nat_hydro = sum(rel_cov, na.rm = T),
+              .groups = 'drop')
+
+  # % native perennials
+  pct_nat_peren <- herbs |> filter(OH_STATUS == "native" & HABIT %in% c("W", "PE")) |>
+    group_by(LocationID, FeatureID, SampleYear, ModuleNo) |>
+    summarize(pct_nat_peren = sum(rel_cov, na.rm = T),
+              .groups = 'drop')
+
+  # % perennial
+  pct_peren <- herbs |> filter(HABIT %in% c("W", "PE")) |>
+    group_by(LocationID, FeatureID, SampleYear, ModuleNo) |>
+    summarize(pct_peren = sum(rel_cov, na.rm = T),
+              .groups = 'drop')
+
+  # % aventives
+  pct_advent <- herbs |> filter(OH_STATUS %in% c("adventive", "cryptogenic")) |>
+    group_by(LocationID, FeatureID, SampleYear, ModuleNo) |>
+    summarize(pct_advent = sum(rel_cov, na.rm = T),
+              .groups = 'drop')
+
+  # Wetness Index
+  wet_index <- herbs |> # spreadsheet uses reg wetland indicator
+    group_by(LocationID, FeatureID, SampleYear, ModuleNo) |>
+    summarize(wet_index = sum(wet_rel_cov, na.rm = T),
+              .groups = 'drop')
+
+  info_list <- list(trees_per_ha, shrubs_per_ha, pct_button, pct_nat_hydro, pct_nat_peren, pct_peren, pct_advent, wet_index)
+
+  info_comb <- purrr::reduce(info_list, full_join, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
+
+  info_comb2 <- left_join(full_evs, info_comb, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo")) |>
+    data.frame()
+
+  info_cols <- c("trees_per_ha", "shrubs_per_ha", "pct_button", "pct_nat_hydro", "pct_nat_peren", "pct_peren",
+                 "pct_advent", "wet_index")
+
+  info_comb2[,info_cols][is.na(info_comb2[,info_cols])] <- 0
+
+  info_comb3 <- info_comb2[,c("LocationID", "FeatureID", "SampleYear", "ModuleNo", info_cols)]
+
+  comb_dat <- full_join(vibi_comb3, info_comb3, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo")) |>
+    arrange(FeatureID, SampleYear)
+
+  vibi_cols <- c("Num_Carex", "Carex_Score", "Num_Cyper", "Cyper_Score", "Num_Dicot", "Dicot_Score",
+                 "Num_Shade", "Shade_Score", "Num_Shrub", "Shrub_Score", "Num_Shrub_reg", "Shrub_Score_reg",
+                 "Num_Hydro", "Hydro_Score", "Num_Hydro_reg", "Hydro_Score_reg",
+                 "Num_SVP", "SVP_Score", "AP_Ratio", "AP_Score",
+                 "FQAI", "FQAI_Score", "FQAI_Score_FQ", "cov_wt_C", "Cov_Wt_C_Score_FQ",
+                 "Pct_Bryo", "Pct_Bryo_Score", "Pct_Hydro", "Pct_Hydro_Score", "Pct_Hydro_reg", "Pct_Hydro_Score_reg",
+                 "Pct_Sens", "Pct_Sens_Score", "Pct_Tol", "Pct_Tol_Score", "Pct_InvGram", "Pct_InvGram_Score",
+                 "RelDen_SmTree", "SmTree_Score", "SubcanIV", "SubcanIV_Score", "CanopyIV", "CanopyIV_Score",
+                 "Avg_Bmass", "Biomass_Score", "VIBI_Score_State", "VIBI_Score_ACOEReg", "VIBI_Score_FQ",
+                 "Avg_Plot_Cover")
+
+  site_cols <- c("LocationID", "FeatureTypes", "FeatureID", "Park", "County", "TotalMods", "ModuleNo",
+                 "PlotConfig", "AreaHA", "SampleYear", "SampleDate", "EventID",
+                 "DomVeg_Lev1", "DomVeg_Lev2", "DomVeg_Lev3",
+                 "X1oPlants", "X2oVegID", "X1oHGM", "HGMClass")
+
+  comb_dat1 <- comb_dat[,c(site_cols, vibi_cols, info_cols)]
+
+  # Adding a final check for dates that don't match across Herbs, Woody and Biomass. Not an easy way to fix
+  # dates across the data modules, so just adding a warning when it happens.
+
+  # find years with multiple eventIDs in a given site
+  mult_evs_f <- comb_dat1 |> select(LocationID, FeatureID, SampleYear, EventID, SampleDate) |>  unique() |>
+    group_by(LocationID, FeatureID, SampleYear) |>
+    summarize(num_evs = sum(!is.na(EventID)),
+              EventID = first(EventID),
+              SampleDate = first(SampleDate),
+              .groups = 'drop') |>
+    filter(num_evs > 1)
+
+  if(nrow(mult_evs_f) > 0){
+    warning(paste0("Multiple sample dates were detected for the following sites within the same year across Herbs, Woody or Biomass",
+                   " resulting in multiple rows of VIBI scores for a given site with a year. ",
+                   "\n",
+                   paste0(mult_evs_f[,c("FeatureID", "EventID")], collapse = "\n")))
+  }
+
+  final_dat <- comb_dat1 |> arrange(FeatureID, SampleYear, ModuleNo)
+
+  return(final_dat)
   }
