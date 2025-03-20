@@ -288,8 +288,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1,
            OH_STATUS, FORM, WETreg, ScientificName) |>
     #filter(DomVeg_Lev1 %in% c("emergent", "shrub")) |>
-    filter(OH_STATUS == "native" & FORM == "shrub" &
-             WETreg %in% c("OBL", "FACW")) |> unique() |> #, "(FACW)", "FACW+", "(FACW+)")) |> unique() |>
+    filter(OH_STATUS == "native" & FORM == "shrub" & WETreg %in% wet) |> unique() |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1) |>
     summarize(Num_Shrub_reg = sum(!is.na(ScientificName)), .groups= "drop") |>
     mutate(Shrub_Score_reg = case_when(is.na(Num_Shrub_reg) ~ NA_real_,
@@ -310,8 +309,9 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1,
            OH_STATUS, FORM, WET, ScientificName) |>
     #filter(DomVeg_Lev1 %in% c("emergent", "shrub")) |>
-    filter(OH_STATUS == "native" & FORM == "shrub" &
-             WET %in% wet) |> unique() |>
+    filter(OH_STATUS == "native" & FORM == "shrub" & WET %in% wet) |>
+    #select(-OH_STATUS, -WET, -FORM) |>
+    unique() |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1) |>
     summarize(Num_Shrub = sum(!is.na(ScientificName)), .groups= "drop") |>
     mutate(Shrub_Score = case_when(is.na(Num_Shrub) ~ NA_real_,
@@ -333,7 +333,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
            OH_STATUS, WETreg, ScientificName) |>
     #filter(DomVeg_Lev1 %in% c("emergent", "shrub")) |>
     filter(OH_STATUS == "native" & WETreg %in% wet) |>
-    select(-OH_STATUS, -WETreg) |>
+    #select(-OH_STATUS, -WETreg) |>
     unique() |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1) |>
     summarize(Num_Hydro_reg = sum(!is.na(ScientificName)), .groups = 'drop') |>
@@ -501,12 +501,11 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, tot_cov, ScientificName) |>
     summarize(rel_cov = sum(rel_cov), .groups = 'drop') |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, tot_cov) |>
-    summarize(Pct_Hydro_reg = sum(rel_cov),
-              .groups = 'drop') |>
+    summarize(Pct_Hydro_reg = sum(rel_cov), .groups = 'drop') |>
     mutate(Pct_Hydro_Score_reg = case_when(is.na(Pct_Hydro_reg) ~ NA_real_,
                                           tot_cov < 0.10 ~ 0, # first case
-                                          Pct_Hydro_reg <= 0.1 ~ 0,
-                                          Pct_Hydro_reg > 0.1 & Pct_Hydro_reg <= 0.15 ~ 3,
+                                          Pct_Hydro_reg <= 0.10 ~ 0,
+                                          Pct_Hydro_reg > 0.10 & Pct_Hydro_reg <= 0.15 ~ 3,
                                           Pct_Hydro_reg > 0.15 & Pct_Hydro_reg <= 0.28 ~ 7,
                                           Pct_Hydro_reg > 0.28 ~ 10,
                                           TRUE ~ NA_real_))
@@ -527,12 +526,11 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, tot_cov, ScientificName) |>
     summarize(rel_cov = sum(rel_cov), .groups = 'drop') |>
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, tot_cov) |>
-    summarize(Pct_Hydro = sum(rel_cov),
-              .groups = 'drop') |>
+    summarize(Pct_Hydro = sum(rel_cov), .groups = 'drop') |>
     mutate(Pct_Hydro_Score = case_when(is.na(Pct_Hydro) ~ NA_real_,
                                           tot_cov < 0.10 ~ 0, # first case
-                                          Pct_Hydro <= 0.1 ~ 0,
-                                          Pct_Hydro > 0.1 & Pct_Hydro <= 0.15 ~ 3,
+                                          Pct_Hydro <= 0.10 ~ 0,
+                                          Pct_Hydro > 0.10 & Pct_Hydro <= 0.15 ~ 3,
                                           Pct_Hydro > 0.15 & Pct_Hydro <= 0.28 ~ 7,
                                           Pct_Hydro > 0.28 ~ 10,
                                           TRUE ~ NA_real_))
@@ -565,7 +563,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
                                      DomVeg_Lev1 %in% c("shrub") & Pct_Sens > 0.06 & Pct_Sens <= 0.13 ~ 7,
                                      DomVeg_Lev1 %in% c("shrub") & Pct_Sens > 0.13 ~ 10,
 
-                                     DomVeg_Lev1 %in% c("forest") & Pct_Sens <= 0.035~ 0,
+                                     DomVeg_Lev1 %in% c("forest") & Pct_Sens <= 0.035 ~ 0,
                                      DomVeg_Lev1 %in% c("forest") & Pct_Sens > 0.035 & Pct_Sens <= 0.12 ~ 3,
                                      DomVeg_Lev1 %in% c("forest") & Pct_Sens > 0.12 & Pct_Sens <= 0.30 ~ 7,
                                      DomVeg_Lev1 %in% c("forest") & Pct_Sens > 0.30 ~ 10,
@@ -740,7 +738,6 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   # table(woody_check$rel_sum, useNA = 'always') # all sum to 1
 
   # Pole Timber rel dens
-  #table(woody$DiamID, woody$DiamVal) C5-C7
   #**If no or only a few woody stems >1m tall in sample plot or if stems per ha <10, score metric as 0.
   # Interpreting this as <= 3 stems >1m tall
   pole1 <- woody |> #filter(DomVeg_Lev1 == "forest") |>
