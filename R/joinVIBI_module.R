@@ -1,5 +1,10 @@
 #' @title joinVIBI_module: join module-level VIBI metrics
 #'
+#' @include getPlots.R
+#' @include getHerbs.R
+#' @include getWoody.R
+#' @include getBiomass.R
+#'
 #' @importFrom dplyr arrange between case_when filter first full_join group_by left_join mutate select summarize
 #' @importFrom tidyr pivot_wider
 #' @importFrom tidyselect starts_with
@@ -1086,7 +1091,11 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     summarize(wet_index = sum(wet_rel_cov, na.rm = T),
               .groups = 'drop')
 
-  info_list <- list(trees_per_ha, shrubs_per_ha, pct_button, pct_nat_hydro, pct_nat_peren, pct_peren, pct_advent, wet_index)
+  # return total stems ha
+  tot_stems <- woody |> select(LocationID, FeatureID, SampleYear, ModuleNo, tot_stems_per_ha) |> unique()
+
+  # combine results
+  info_list <- list(trees_per_ha, shrubs_per_ha, pct_button, pct_nat_hydro, pct_nat_peren, pct_peren, pct_advent, wet_index, tot_stems)
 
   info_comb <- purrr::reduce(info_list, full_join, by = c("LocationID", "FeatureID", "SampleYear", "ModuleNo"))
 
@@ -1094,7 +1103,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
     data.frame()
 
   info_cols <- c("trees_per_ha", "shrubs_per_ha", "pct_button", "pct_nat_hydro", "pct_nat_peren", "pct_peren",
-                 "pct_advent", "wet_index")
+                 "pct_advent", "wet_index", "tot_stems_per_ha")
 
   info_comb2[,info_cols][is.na(info_comb2[,info_cols])] <- 0
 

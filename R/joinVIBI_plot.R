@@ -1,5 +1,10 @@
 #' @title joinVIBI_plot: join plot-level VIBI metrics
 #'
+#' @include getPlots.R
+#' @include getHerbs.R
+#' @include getWoody.R
+#' @include getBiomass.R
+#'
 #' @importFrom dplyr arrange between case_when filter first full_join group_by left_join mutate select summarize
 #' @importFrom tidyr pivot_wider
 #' @importFrom purrr reduce
