@@ -55,7 +55,7 @@
 #'
 #' }
 #'
-#' @return Returns a data frame of VIBI calculations for each module of each plot
+#' @return Returns a data frame of average VIBI calculations for each plot
 #' @export
 #'
 
