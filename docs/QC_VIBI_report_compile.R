@@ -191,30 +191,11 @@ odd_dates2 <- unparsed_dates |> filter(!is.na(StartDate_check)) |> select(EventI
 QC_table <- rbind(QC_table,
                   QC_check(odd_dates2, "Periods/Events", "tbl_SamplingEvents with StartDates that don't parse properly."))
 
-tbl_odd_dates2 <- make_kable(odd_dates2, "tbl_SamplingEvents with StartDates that don't parse properly.")
+tbl_odd_dates2 <- make_kable(odd_dates2, "tbl_SamplingEvents with StartDates that don't parse properly or don't make sense.")
 
-
-
-
-
-# tbl_Sampling
-is_date(tbl_SamplingEvents$StartDate)
-head(tbl_SamplingEvents)
-
-
-  loc_pd_ev <- full_join(loc, tbl_S)
-  tbl_sampevs <- tbl_SamplingEvents |> select(Location, PeriodID)
-
-  head(tbl_SamplingPeriods)
-
-  # Find LocationIDs in data tables not in tbl_Locations
-
-  head(sample_evs)
-
-
-  # check if locations checks returned at least 1 record to determine whether to include that tab in report
-  loc_check <- QC_table |> filter(Data %in% "Locations" & Num_Records > 0)
-  loc_include <- tab_include(loc_check)
+# check if periods/events checks returned at least 1 record to determine whether to include that tab in report
+pev_check <- QC_table |> filter(Data %in% "Periods/Events" & Num_Records > 0)
+pev_include <- tab_include(pev_check)
 
 #----- Herbs -----
 # Find FeatureIDs in Herbs that don't match Locations via LocationID

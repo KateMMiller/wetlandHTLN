@@ -35,7 +35,7 @@ year_range = if(params$all_years == TRUE){2008:year_curr} else {year_curr}
 ```
 
 
-Wetland Quality Control checking for CUVA and `r paste(year, collapse = ", ")` {.tabset .tabset-pills}
+Wetland Quality Control checking for CUVA and `r paste(year_curr, collapse = ", ")` {.tabset .tabset-pills}
 ---
 
 ```{r, include = F, results = 'hide'}
@@ -63,7 +63,7 @@ check_null_print(tbl_intern_check, 4, "InternMods vs TotalMods")
 
 ```
 
-```{r eval = loc_include, results = "asis"}
+```{r eval = pev_include, results = "asis"}
 cat("### Sampling Periods/Events {.tabset}", "\n\n")
 
 check_null_print(tbl_miss_periods, 4, "miss PeriodID")
