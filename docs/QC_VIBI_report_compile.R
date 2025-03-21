@@ -23,13 +23,21 @@ QC_check <- function(df, tab, check){
 # function to make tables via kable
 make_kable <- function(df, cap){
   QC_table <- if(nrow(df) > 0){
+    if(nrow(df) > 1){
     kable(df, format = 'html', align = 'c', caption = cap)  |>
       kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'),
                     full_width = TRUE, position = 'left', font_size = 12) |>
       row_spec(0, extra_css = "border-top: 1px solid #000000; border-bottom: 1px solid #000000;") |>
       collapse_rows(1, valign = 'top') |>
       row_spec(nrow(df), extra_css = 'border-bottom: 1px solid #000000;')
-  } else NULL
+    } else if(nrow(df) == 1){
+      kable(df, format = 'html', align = 'c', caption = cap)  |>
+        kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'),
+                      full_width = TRUE, position = 'left', font_size = 12) |>
+        row_spec(0, extra_css = "border-top: 1px solid #000000; border-bottom: 1px solid #000000;") |>
+        row_spec(nrow(df), extra_css = 'border-bottom: 1px solid #000000;')
+      }
+    } else NULL
 }
 
 # Determine whether to include/drop tab in rmd output
@@ -40,39 +48,15 @@ check_null <- function(table){
   if(!is.null(table)){table}
 }
 
-# View checking
-# Function to check for potential issues in the raw views
-check_view <- function(view_name, nums = NA){
-  cat(paste0("Checks for: ", view_name, "\n"))
-  view <- get(view_name, envir = ROCKY)
-  cat("Column Names: ", names(view), "\n")
-  if(any(names(view) %in% "StartDate")){cat("Summary of year range: ", sort(unique(as.numeric(format(view$StartDate, "%Y")))), "\n")}
-  if(any(names(view) %in% "SpeciesCode")){cat("Species codes: ", sort(unique(view$SpeciesCode)), "\n")}
-  if(any(names(view) %in% "CoverCode")){cat("Cover codes: ", sort(unique(view$CoverCode)), "\n")}
-  cat("List of sites: ", sort(unique(view$SiteCode)) ,"\n")
-
-  if(!any(is.na(nums))){
-    if(length(nums) == 1){
-      cat("Checks on ", nums, ": ", sep = "")
-      cat("Range: ", paste(range(view[, nums], na.rm = T)[1], range(view[, nums], na.rm = T)[2], sep = ", "), "; ", sep = "")
-      cat("NA Count: ", length(view[is.na(view[,nums]), nums]))
-    } else {
-      cat("Checks on numeric fields: ", "\n")
-      invisible(lapply(seq_along(nums), function(x){
-        num = nums[x]
-        cat(num, ": ", sep = "")
-        cat("Range: ", paste(range(view[, num], na.rm = T)[1], range(view[, num], na.rm = T)[2], sep = ", "), "; ", sep = "")
-        cat("NA Count: ", length(view[is.na(view[,num]), num]))
-        cat("\n")
-      }))
-    }
-  }
+check_null_print <- function(table, tab_level = 4, tab_title){
+  if(!is.null(table)){cat(paste0(rep("#", tab_level), collapse = ""), " ", tab_title, " {.tabset} ", "\n\n")}
+  check_null(table)
 }
 
 #---- Individual View checking ----
 #----- Locations -----
 loc <- get("locations", env = HTLNwetlands)
-table(loc$LocationID)
+locv <- loc |> filter(FeatureTypes %in% c("VIBIPlotID", "VIBIplotID"))
 
 # Check for LocationIDs that don't match convention of PARKWetlnd
 locid_typos <- loc |> filter(!substr(LocationID, 1, 10) %in% c("CUVAWetlnd", "TAPRWetlnd")) |> select(LocationID, FeatureTypes, FeatureID)
@@ -86,20 +70,62 @@ feat_typos <- loc |> filter(FeatureTypes %in% feat_typos1$Var1) |> select(Locati
 
 QC_table <- rbind(QC_table,
             QC_check(feat_typos, "Locations", "FeatureTypes only recorded once (likely typo)."))
-tbl_feat_typos <- make_kable(feat_typos, "FeatureTypes only recorded once (likely typo).")
+tbl_feat_typos <- make_kable(feat_typos, "FeatureTypes only recorded once (likely typo)- check capitalization.")
 
 # Check for non-alphanumeric symbols in the FeatureID
-feat_symb <- loc[grepl("[^[:alnum:]]", loc$FeatureID), c("LocationID", "FeatureTypes", "FeatureID")]
-QC_table <- rbind(QC_table,
-                  QC_check(feat_symb, "Locations", "Special symbols in FeatureID - consider revising."))
+feat_symb <- data.frame(loc[grepl("[^[:alnum:]]", loc$FeatureID), c("LocationID", "FeatureTypes", "FeatureID")])
 
-tbl_feat_symb <- make_kable(feat_symb, "Special symbols in FeatureID - consider revising.")
+QC_table <- rbind(QC_table,
+                  QC_check(feat_symb, "Locations", "Special symbols in FeatureID. Consider revising."))
+
+tbl_feat_symb <- make_kable(feat_symb, "Special symbols in FeatureID. Consider revising.")
+
+# Check where DomVeg_Lev1_orig missing
+miss_domveg <- locv |>
+  filter(is.na(DomVeg_Lev1_orig)) |>
+  select(LocationID, FeatureTypes, FeatureID, X1oPlants, DomVeg_Lev1 = DomVeg_Lev1_orig)
+
+QC_table <- rbind(QC_table,
+                  QC_check(miss_domveg, "Locations", "DomVeg_Lev1 missing a value needed for VIBI thresholds."))
+
+tbl_miss_domveg <- make_kable(miss_domveg, "Locations", "DomVeg_Lev1 missing a value needed for VIBI thresholds. Note that the DomVegID is also missing for those records.")
+
+# Check where DomVeg_Lev1 doesn't mathe X1oPlants, the column used by importData to make the DomVeg_Lev1 column
+conflict_domveg <- locv
+  select(LocationID, FeatureTypes, FeatureID, X1oPlants, DomVeg_Lev1 = DomVeg_Lev1_orig) |>
+  filter(!is.na(DomVeg_Lev1)) |>
+  filter(!((DomVeg_Lev1 == "Emergent" & X1oPlants == "PEM") |
+           (DomVeg_Lev1 == "Shrub" & X1oPlants == "PSS") |
+             (DomVeg_Lev1 == "Forest" & X1oPlants == "PFO")))
+
+QC_table <- rbind(QC_table,
+                  QC_check(conflict_domveg, "Locations", "DomVeg_Lev1 doesn't match expected value for X1oPlants."))
+
+tbl_conflict_domveg <- make_kable(conflict_domveg, "DomVeg_Lev1 doesn't match expected value for X1oPlants.")
 
 # Check that dividing # modules and AreaHA result in 0.01ha
+area_error <- locv |> mutate(mod_area = as.numeric(AreaHA)/as.numeric(TotalMods)) |> filter(mod_area != 0.01) |>
+  select(LocationID, FeatureID, TotalMods, AreaHA, PlotConfig, mod_area)
+
+QC_table <- rbind(QC_table,
+                  QC_check(area_error, "Locations", "AreaHA and TotMods combination results in modules != 0.01ha."))
+
+tbl_area_error <- make_kable(area_error, "AreaHA and TotalMods combination results in modules != 0.01ha")
 
 # Check that InternMods <= TotalMOds
+intern_check <- locv |> filter(InternMods > TotalMods) |>
+  select(LocationID, FeatureID, TotalMods, InternMods, PlotConfig)
 
+
+QC_table <- rbind(QC_table,
+                  QC_check(intern_check, "Locations", "InternMods is greater than TotalMods."))
+
+tbl_intern_check <- make_kable(intern_check, "InternMods is greater than TotalMods")
 # Check SamplingPeriods table for StartDate format- catch any that don't follow %m/%d/%Y
+
+# check if locations checks returned at least 1 record to determine whether to include that tab in report
+loc_check <- QC_table |> filter(Data %in% "Locations" & Num_Records > 0)
+loc_include <- tab_include(loc_check)
 
 #----- SamplingEvents/Periods -----
 # Find EventIDs in Herbs, Woody, BigTree, Biomass that are missing from the SamplingPeriods table

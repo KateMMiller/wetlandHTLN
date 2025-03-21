@@ -12,3 +12,58 @@ params:
   
 ---
 
+```{r setup, include = F}
+knitr::opts_chunk$set(echo = FALSE)
+options(knitr.kable.NA = '', scipen = 100)
+```
+
+```{r imports, include = FALSE}
+library(wetlandHTLN)
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+#library(htmltools) # for tagList to iterate on a code chunk. Not sure I'm going to need this yet.
+
+importData()
+year_curr = params$year_curr
+year = if(params$all_years == TRUE){2013:year_curr} else {year_curr}
+
+# year = 2013:2021
+# park = "ACAD"
+# year_curr = 2021
+
+#arglist <- list(park = park, years = year)
+
+# locs <- do.call(getPIBoltDistance, arglist) |>
+#   select(SiteCode) |> unique() |> c() #|> as.character()
+```
+
+
+Wetland Quality Control checking for CUVA and `r paste(year, collapse = ", ")` {.tabset .tabset-pills}
+---
+
+```{r, include = F, results = 'hide'}
+source('QC_VIBI_report_compile.R')
+```
+
+```{r eval = loc_include, results = "asis"}
+cat("### Locations {.tabset}", "\n\n")
+
+check_null_print(tbl_locid_typos, 4, "LocationID")
+
+check_null_print(tbl_feat_typos, 4, "FeatureType")
+
+check_null_print(tbl_feat_symb, 4, "FeatureID")
+
+check_null_print(tbl_miss_domveg, 4, "DomVeg missing")
+
+check_null_print(tbl_conflict_domveg, 4, "DomVeg conflict")
+
+check_null_print(tbl_area_error, 4, "AreaHA vs TotMods")
+
+check_null_print(tbl_intern_check, 4, "InternMods vs TotalMods")
+
+
+
+```
+
