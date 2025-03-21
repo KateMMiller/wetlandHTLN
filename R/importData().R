@@ -172,7 +172,8 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   loc1 <- get("Locations", envir = env)
   loc2 <- dplyr::left_join(loc1, tluHGM, by = "HGM_ID")
   loc3 <- dplyr::left_join(loc2, tluDom, by = c("DomVegID" = "DomVeg_ID"))
-  loc3$FeatureTypes[loc3$FeatureTypes == "VIBIPlotID"] <- "VIBIplotID"
+  #loc3$FeatureTypes[loc3$FeatureTypes == "VIBIPlotID"] <- "VIBIplotID"
+  loc3$DomVeg_Lev1_orig <- loc3$DomVeg_Lev1 # keep backup, for QC checking
   loc4 <- loc3 |> dplyr::select(-DomVeg_Lev1)
 
   # Fill in missing DomVeg_Lev1 using X1ofPlants

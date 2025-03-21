@@ -169,8 +169,37 @@ QC_table <- rbind(QC_table,
 tbl_miss_samp_evs <- make_kable(miss_samp_evs, "EventIDs in VIBI tables that are missing from tbl_SamplingEvents.")
 
 # Check SamplingPeriods table for StartDate format- catch any that don't follow %m/%d/%Y
+tbl_SamplingPeriods$StartDate_check <- format(as.Date(tbl_SamplingPeriods$StartDate, format = "%Y-%m-%d"), format = "%Y-%m-%d")
+tbl_SamplingEvents$StartDate_check <- format(as.Date(tbl_SamplingEvents$StartDate, tryFormats = c("%m/%d/%Y", "%m/%d/%y")), format = "%Y-%m-%d")
+
+unparsed_dates <- tbl_SamplingEvents |> filter(StartDate_check < as.Date("2008-01-01", format = "%Y-%m-%d") |
+                                          StartDate_check > as.Date(Sys.Date(), format = "%Y-%m-%d") |
+                                            is.na(StartDate_check)) |>
+  select(EventID, StartDate, StartDate_check)
 
 
+odd_dates1 <- unparsed_dates |> filter(is.na(StartDate_check)) |> select(EventID, StartDate)
+
+QC_table <- rbind(QC_table,
+                  QC_check(odd_dates1, "Periods/Events", "tbl_SamplingEvents with StartDates that can't parse."))
+
+tbl_odd_dates1 <- make_kable(odd_dates1, "tbl_SamplingEvents with StartDates that can't parse.")
+
+
+odd_dates2 <- unparsed_dates |> filter(!is.na(StartDate_check)) |> select(EventID, StartDate, StartDate_check)
+
+QC_table <- rbind(QC_table,
+                  QC_check(odd_dates2, "Periods/Events", "tbl_SamplingEvents with StartDates that don't parse properly."))
+
+tbl_odd_dates2 <- make_kable(odd_dates2, "tbl_SamplingEvents with StartDates that don't parse properly.")
+
+
+
+
+
+# tbl_Sampling
+is_date(tbl_SamplingEvents$StartDate)
+head(tbl_SamplingEvents)
 
 
   loc_pd_ev <- full_join(loc, tbl_S)
