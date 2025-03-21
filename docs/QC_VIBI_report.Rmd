@@ -1,0 +1,14 @@
+---
+output:
+  html_document:
+    css: www/styles.css
+    anchor_sections: FALSE
+    includes:
+      in_header: "header_manual.html"
+
+params:
+  year_curr: 2023 # Current year of sampling
+  all_years: TRUE # If FALSE, only reports on year_curr; TRUE reports on all years
+  
+---
+
