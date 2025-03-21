@@ -12,7 +12,9 @@
 #
 # importData()
 #
-# years = 2008:2023
+# year_curr = 2023
+# year_range = 2008:2023
+# all_years = TRUE
 
 #---- Functions ----
 # Summarize results of QC check
@@ -88,15 +90,15 @@ miss_domveg <- locv |>
 QC_table <- rbind(QC_table,
                   QC_check(miss_domveg, "Locations", "DomVeg_Lev1 missing a value needed for VIBI thresholds."))
 
-tbl_miss_domveg <- make_kable(miss_domveg, "Locations", "DomVeg_Lev1 missing a value needed for VIBI thresholds. Note that the DomVegID is also missing for those records.")
+tbl_miss_domveg <- make_kable(miss_domveg, "DomVeg_Lev1 missing a value needed for VIBI thresholds. Note that the DomVegID is also missing for those records.")
 
 # Check where DomVeg_Lev1 doesn't mathe X1oPlants, the column used by importData to make the DomVeg_Lev1 column
-conflict_domveg <- locv
+conflict_domveg <- locv |>
   select(LocationID, FeatureTypes, FeatureID, X1oPlants, DomVeg_Lev1 = DomVeg_Lev1_orig) |>
   filter(!is.na(DomVeg_Lev1)) |>
   filter(!((DomVeg_Lev1 == "Emergent" & X1oPlants == "PEM") |
-           (DomVeg_Lev1 == "Shrub" & X1oPlants == "PSS") |
-             (DomVeg_Lev1 == "Forest" & X1oPlants == "PFO")))
+            (DomVeg_Lev1 == "Shrub" & X1oPlants == "PSS") |
+              (DomVeg_Lev1 == "Forest" & X1oPlants == "PFO")))
 
 QC_table <- rbind(QC_table,
                   QC_check(conflict_domveg, "Locations", "DomVeg_Lev1 doesn't match expected value for X1oPlants."))
@@ -127,8 +129,63 @@ tbl_intern_check <- make_kable(intern_check, "InternMods is greater than TotalMo
 loc_check <- QC_table |> filter(Data %in% "Locations" & Num_Records > 0)
 loc_include <- tab_include(loc_check)
 
-#----- SamplingEvents/Periods -----
-# Find EventIDs in Herbs, Woody, BigTree, Biomass that are missing from the SamplingPeriods table
+#----- SamplingEvents/Periods/Locations checks -----
+# Find EventIDs in Herbs, Woody, BigTree, Biomass that are missing from the SamplingEvents table
+
+# import database tables to check raw IDs
+tryCatch(
+  db <- DBI::dbConnect(drv = odbc::odbc(), dsn = "HTLNWetlands"),
+  error = function(e){stop(paste0("Unable to connect to DSN to check tbl_SamplingEvents vs tbl_SamplingPeriods."))})
+  tbls <- c("tbl_SamplingEvents", "tbl_SamplingPeriods", "tbl_VIBI_Herb", "tbl_VIBI_Herb_Biomass", "tbl_VIBI_Woody", "tbl_BigTrees")
+  tbl_import <- lapply(seq_along(tbls), function(x){
+                         tab1 <- tbls[x]
+                         tab <- DBI::dbReadTable(db, tab1)
+                         return(tab)})
+DBI::dbDisconnect(db)
+tbl_import <- setNames(tbl_import, tbls)
+list2env(tbl_import, envir = .GlobalEnv)
+
+# Check that tbl_SamplingEvents$PeriodIDs are included in tbl_SamplingPeriods$PeriodID
+miss_periods <- tbl_SamplingEvents[!unique(tbl_SamplingEvents$PeriodID) %in% unique(tbl_SamplingPeriods$PeriodID),]
+
+QC_table <- rbind(QC_table,
+                  QC_check(miss_periods, "Periods/Events", "tbl_SamplingEvents$PeriodID missing from tbl_SamplingPeriods$PeriodID."))
+
+tbl_miss_periods <- make_kable(miss_periods, "tbl_SamplingEvents$PeriodID missing from tbl_SamplingPeriods$PeriodID.")
+
+# Find EventIDs in data tables missing from tbl_SamplingEvents
+sample_evs <- rbind(tbl_VIBI_Herb |> select(LocationID, EventID) |> unique() |> mutate(table = "tbl_VIBI_Herb", pres = "X"),
+                    tbl_VIBI_Woody |> select(LocationID, EventID) |> unique() |> mutate(table = "tbl_VIBI_Woody", pres = "X"),
+                    tbl_VIBI_Herb_Biomass |> select(LocationID, EventID) |> unique() |> mutate(table = "tbl_VIBI_Herb_Biomass", pres = "X"),
+                    tbl_BigTrees |> select(LocationID, EventID) |> unique() |> mutate(table = "tbl_BigTrees", pres = "X")) |>
+pivot_wider(names_from = table, values_from = pres)
+
+miss_samp_evs <- sample_evs[!sample_evs$EventID %in% tbl_SamplingEvents$EventID,]
+
+QC_table <- rbind(QC_table,
+                  QC_check(miss_samp_evs, "Periods/Events", "EventIDs in VIBI tables that are missing from tbl_SamplingEvents."))
+
+
+tbl_miss_samp_evs <- make_kable(miss_samp_evs, "EventIDs in VIBI tables that are missing from tbl_SamplingEvents.")
+
+# Check SamplingPeriods table for StartDate format- catch any that don't follow %m/%d/%Y
+
+
+
+
+  loc_pd_ev <- full_join(loc, tbl_S)
+  tbl_sampevs <- tbl_SamplingEvents |> select(Location, PeriodID)
+
+  head(tbl_SamplingPeriods)
+
+  # Find LocationIDs in data tables not in tbl_Locations
+
+  head(sample_evs)
+
+
+  # check if locations checks returned at least 1 record to determine whether to include that tab in report
+  loc_check <- QC_table |> filter(Data %in% "Locations" & Num_Records > 0)
+  loc_include <- tab_include(loc_check)
 
 #----- Herbs -----
 # Find FeatureIDs in Herbs that don't match Locations via LocationID
@@ -180,6 +237,3 @@ loc_include <- tab_include(loc_check)
 # to find species added during sampling.
 
 # Find species on tlu_WetlndSpecies_list that aren't on FQAI list
-
-QC_table <- rbind(QC_table,
-                  QC_check())
