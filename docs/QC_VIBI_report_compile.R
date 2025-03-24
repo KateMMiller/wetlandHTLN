@@ -195,7 +195,7 @@ tbl_sample_evs <- kable(sample_evs3, format = 'html', align = 'c',
   kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'),
                 full_width = TRUE, position = 'left', font_size = 12) |>
   row_spec(0, extra_css = "border-top: 1px solid #000000; border-bottom: 1px solid #000000;") |>
-  column_spec(3:ncol(sample_evs3), background = ifelse(sample_evs3$Num_Samp_Mods < 3, "#F2F2A0", "#ffffff")) %>%
+  column_spec(4:ncol(sample_evs3), background = ifelse(sample_evs3$Num_Samp_Mods < 3, "#F2F2A0", "#ffffff")) |>
   collapse_rows(1:3, valign = 'top') |>
   row_spec(nrow(sample_evs3), extra_css = 'border-bottom: 1px solid #000000;') |>
   column_spec(3, width = "150px")
