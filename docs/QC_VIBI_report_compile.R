@@ -158,15 +158,15 @@ loc_include <- tab_include(loc_check)
 miss_periods <- tbl_SamplingEvents[!unique(tbl_SamplingEvents$PeriodID) %in% unique(tbl_SamplingPeriods$PeriodID),]
 
 QC_table <- rbind(QC_table,
-                  QC_check(miss_periods, "Periods/Events", "tbl_SamplingEvents$PeriodID missing from tbl_SamplingPeriods$PeriodID."))
+                  QC_check(miss_periods, "Periods/Events", "tbl_SamplingEvents.PeriodID missing from tbl_SamplingPeriods.PeriodID."))
 
 tbl_miss_periods <- make_kable(miss_periods, "tbl_SamplingEvents$PeriodID missing from tbl_SamplingPeriods$PeriodID.")
 
 # Find EventIDs in data tables missing from tbl_SamplingEvents
 sample_evs <- rbind(tbl_VIBI_Herb |> select(LocationID, EventID) |> unique() |> mutate(table = "tbl_VIBI_Herb", pres = "X"),
                     tbl_VIBI_Woody |> select(LocationID, EventID) |> unique() |> mutate(table = "tbl_VIBI_Woody", pres = "X"),
-                    tbl_VIBI_Herb_Biomass |> select(LocationID, EventID) |> unique() |> mutate(table = "tbl_VIBI_Herb_Biomass", pres = "X"),
-                    tbl_BigTrees |> select(LocationID, EventID) |> unique() |> mutate(table = "tbl_BigTrees", pres = "X")) |>
+                    tbl_BigTrees |> select(LocationID, EventID) |> unique() |> mutate(table = "tbl_BigTrees", pres = "X"),
+                    tbl_VIBI_Herb_Biomass |> select(LocationID, EventID) |> unique() |> mutate(table = "tbl_VIBI_Herb_Biomass", pres = "X")) |>
 pivot_wider(names_from = table, values_from = pres)
 
 miss_samp_evs <- sample_evs[!sample_evs$EventID %in% tbl_SamplingEvents$EventID,]
@@ -176,6 +176,27 @@ QC_table <- rbind(QC_table,
 
 
 tbl_miss_samp_evs <- make_kable(miss_samp_evs, "EventIDs in VIBI tables that are missing from tbl_SamplingEvents.")
+
+# Create matrix of EventIDs by data type
+sample_evs$SampleDate <- as.Date(sub("CUVAWetlnd", "", sample_evs$EventID), format = "%Y%b%d")
+sample_evs$Year <- as.numeric(format(sample_evs$SampleDate, format = "%Y"))
+sample_evs$Num_Samp_Mods <- rowSums(!is.na(sample_evs[,c("tbl_VIBI_Herb", "tbl_VIBI_Woody", "tbl_VIBI_Herb_Biomass", "tbl_BigTrees")]))
+sample_evs2 <- sample_evs |> select(LocationID, EventID, Year, SampleDate, Herbs = tbl_VIBI_Herb,
+                                    Biomass = tbl_VIBI_Herb_Biomass, Woody = tbl_VIBI_Woody, BigTrees = tbl_BigTrees, Num_Samp_Mods) |>
+  arrange(LocationID, SampleDate)
+
+sample_evs3 <- left_join(locv |> select(LocationID, FeatureID), sample_evs2, by = "LocationID")
+
+tbl_sample_evs <- kable(sample_evs3, format = 'html', align = 'c', caption = "HTLN wetland sampling matrix",
+                         col.names = c("LocationID", "FeatureID", "EventID", "Year", "SampleDate",
+                                       "Herbs", "Biomass", "Woody", "BigTrees", "Num Samples")) |>
+  kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'),
+                full_width = TRUE, position = 'left', font_size = 12) |>
+  row_spec(0, extra_css = "border-top: 1px solid #000000; border-bottom: 1px solid #000000;") |>
+  column_spec(3:ncol(sample_evs3), background = ifelse(sample_evs3$Num_Samp_Mods < 3, "#F2F2A0", "#ffffff")) %>%
+  collapse_rows(1:2, valign = 'top') |>
+  row_spec(nrow(QC_table), extra_css = 'border-bottom: 1px solid #000000;') |>
+  column_spec(3, width = "150px")
 
 # Check SamplingPeriods table for StartDate format- catch any that don't follow %m/%d/%Y
 tbl_SamplingPeriods$StartDate_check <- format(as.Date(tbl_SamplingPeriods$StartDate, format = "%Y-%m-%d"), format = "%Y-%m-%d")
@@ -221,12 +242,17 @@ herb_dups <- tbl_VIBI_Herb |> group_by(LocationID, EventID, ModNo, Species) |>
   summarize(num_records = sum(!is.na(CovCode)), .groups = "drop") |>
   filter(num_records != 1)
 
+if(nrow(herb_dups) > 0){
+  assign("duplicate_herb_spp", herb_dups, envir = .GlobalEnv)
+}
+
 QC_table <- rbind(QC_table,
                   QC_check(herb_dups, "VIBI Herbs", "Duplicate species records within the same LocationID, EventID, and Module."))
 
-tbl_herb_dups <- make_kable(herb_dups, "Duplicate species records within the same LocationID, EventID, and Module.")
+tbl_herb_dups <- make_kable(herb_dups, paste0("Duplicate species records within the same LocationID, EventID, and Module.",
+"Out data frame is saved as 'duplicate_herb_spp' in global environment for easier review."))
 
-# Find species recorded that are not on FQAI list
+# Find species recorded that are not on FQAI or tlu list
 herb_miss <- anti_join(tbl_VIBI_Herb, tluspp, by = c("Species" = "SCIENTIFIC_NAME")) |>
   arrange(Species, LocationID, EventID, ModNo) |> select(VIBI_Herb_ID, LocationID, EventID, Species, ModNo, Comments)
 
@@ -238,7 +264,7 @@ QC_table <- rbind(QC_table,
                   QC_check(herb_miss, "VIBI Herbs", paste0("Species in tbl_VIBI_Herb that are not in the ", spp_list, " species list.")))
 
 tbl_herb_miss <- make_kable(herb_miss, paste0("Species in tbl_VIBI_Herb that are not in the ", spp_list, " species list.",
-                                              "Note that output data frame is saved as 'unmatched_herb_spp' in global environment for easier review."))
+                                              "Output data frame is saved as 'unmatched_herb_spp' in global environment for easier review."))
 
 # Find species that have only been recorded once
 herb_once1 <- tbl_VIBI_Herb |> group_by(Species) |>
@@ -247,7 +273,7 @@ herb_once1 <- tbl_VIBI_Herb |> group_by(Species) |>
 herb_once <- tbl_VIBI_Herb |> filter(Species %in% herb_once1$Species) |> arrange(Species, LocationID, EventID)
 
 QC_table <- rbind(QC_table,
-                  QC_check(herb_once, "VIBI Herbs", "Species that have only been recorded once in tbl_VIBI_Herb. Not necessarily an error, but good to check."))
+                  QC_check(herb_once, "VIBI Herbs", "Species that have only been recorded once in tbl_VIBI_Herb."))
 
 tbl_herb_once <- make_kable(herb_once, "Species that have only been recorded once in tbl_VIBI_Herb. Not necessarily an error, but good to check.")
 
@@ -264,7 +290,7 @@ woody_fid_check <- full_join(locv |> select(LocationID, FeatureID),
   filter(FeatureID_loc != FeatureID_wdy)
 
 QC_table <- rbind(QC_table,
-                  QC_check(woody_fid_check, "Woody", "FeatureIDs in tbl_VIBI_Woody that don't match FeatureIDs in tbl_Locations."))
+                  QC_check(woody_fid_check, "VIBI Woody", "FeatureIDs in tbl_VIBI_Woody that don't match FeatureIDs in tbl_Locations."))
 
 tbl_woody_fid_check <- make_kable(woody_fid_check, "FeatureIDs in tbl_VIBI_Woody that don't match FeatureIDs in tbl_Locations, based on join of LocationID field. If two FeatureIDs look identical, there's likely a space in one of them, which R reads as different.")
 
@@ -273,7 +299,7 @@ woody_blanks <- tbl_VIBI_Woody |> filter(is.na(Scientific_Name) | is.na(Count) |
 
 
 QC_table <- rbind(QC_table,
-                  QC_check(woody_blanks, "Woody", "Blanks in Scientific_Name, DiamID, or Count fields in tbl_VIBI_Woody."))
+                  QC_check(woody_blanks, "VIBI Woody", "Blanks in Scientific_Name, DiamID, or Count fields in tbl_VIBI_Woody."))
 
 tbl_woody_blanks <- make_kable(woody_blanks, "Blanks in Scientific_Name, DiamID, or Count fields in tbl_VIBI_Woody.")
 
@@ -281,106 +307,223 @@ tbl_woody_blanks <- make_kable(woody_blanks, "Blanks in Scientific_Name, DiamID,
 woody9s <- tbl_VIBI_Woody |> filter(Count < 0)
 
 QC_table <- rbind(QC_table,
-                  QC_check(woody9s, "Woody", "Negative 9999 counts, indicating flag."))
+                  QC_check(woody9s, "VIBI Woody", "Negative 9999 counts, indicating flag."))
 
-tbl_woody9s <- make_kable(woody9s, "Negative 9999 counts, indicating a flag..")
+tbl_woody9s <- make_kable(woody9s, "Negative 9999 counts, indicating a flag.")
 
 # Check for DiamIDs that don't match tlu b/c of capitalization
+corr_diamids <- c("BIG", "C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10")
 
+diamid_check <- tbl_VIBI_Woody |> filter(!DiamID %in% corr_diamids)
+
+QC_table <- rbind(QC_table,
+                  QC_check(diamid_check, "VIBI Woody", "DiamIDs that don't match lookup table options, mostly differences in capitalization."))
+
+tbl_diamid_check <- make_kable(diamid_check, "DiamIDs that don't match lookup table options, mostly differences in capitalization.")
 
 # Check for duplicate species within a given module
+woody_dups <- tbl_VIBI_Woody |> group_by(LocationID, EventID, Module_No, DiamID, Scientific_Name) |>
+  summarize(counts = sum(!is.na(Count)), .groups = 'drop') |> filter(counts > 1)
+
+if(nrow(woody_dups) > 0){
+  assign("duplicate_woody_spp", woody_dups, envir = .GlobalEnv)
+}
+
 QC_table <- rbind(QC_table,
-                  QC_check(df, "", ""))
+                  QC_check(woody_dups, "VIBI Woody", "Species in tbl_VIBI_Woody that have duplicate records within the same LocationID, EventID, Module, and DiamID."))
 
-tbl_df <- make_kable(df, "")
-
-# Look for -9999 Counts
-QC_table <- rbind(QC_table,
-                  QC_check(df, "", ""))
-
-tbl_df <- make_kable(df, "")
-
-# Check for DiamIDs that aren't capitalized.
-QC_table <- rbind(QC_table,
-                  QC_check(df, "", ""))
-
-tbl_df <- make_kable(df, "")
+tbl_woody_dups <- make_kable(woody_dups, paste0("Species in tbl_VIBI_Woody that have duplicate records within the same LocationID, EventID, Module, and DiamID.",
+                                              "Out data frame is saved as 'duplicate_woody_spp' in global environment for easier review."))
 
 # Find counts > 99% of ever recorded per DiamID
-QC_table <- rbind(QC_table,
-                  QC_check(df, "", ""))
+diam_99a <- tbl_VIBI_Woody |>
+  mutate(DiamID = toupper(DiamID)) |> filter(Count > 0) |>
+  group_by(DiamID) |> mutate(count_99pct = quantile(Count, probs = 0.99, na.rm = T)) |>
+  filter(Count > count_99pct)
 
-tbl_df <- make_kable(df, "")
+diamid_sort <- data.frame(DiamID = corr_diamids, order = c(12, 1:11))
+
+diam_99 <- left_join(diam_99a, diamid_sort, by = "DiamID") |> arrange(order, LocationID, Module_No, Scientific_Name) |>
+  select(VIBI_Woody_ID, EventID, LocationID, Module_No, Scientific_Name, DiamID, Count, count_99pct)
+
+QC_table <- rbind(QC_table,
+                  QC_check(diam_99, "VIBI Woody", "Counts within DiamID that are >99% of all records in that size class that have been recorded."))
+
+tbl_diam_99 <- make_kable(diam_99, "Counts within DiamID that are >99% of all records in that size class that have been recorded. Not necessarily an error, but good to check")
 
 # Find counts > 99% overall
+count_99a <- tbl_VIBI_Woody |>
+  filter(Count > 0) |>
+  mutate(count_99pct = quantile(Count, probs = 0.99, na.rm = T)) |>
+  filter(Count > count_99pct)
+
+count_99 <- count_99a |> arrange(LocationID, Module_No, Scientific_Name) |>
+  select(VIBI_Woody_ID, EventID, LocationID, Module_No, Scientific_Name, DiamID, Count, count_99pct)
+
 QC_table <- rbind(QC_table,
-                  QC_check(df, "", ""))
+                  QC_check(count_99, "VIBI Woody", "Counts that are >99% of all counts that have been recorded."))
 
-tbl_df <- make_kable(df, "")
+tbl_count_99 <- make_kable(count_99, "Counts that are >99% of all counts that have been recorded. Not necessarily an error, but good to check")
 
-# Find species recorded that are not on tlu_WetlndSpecies_List
+# Find species recorded that are not on FQAI or tlu list
+woody_miss <- anti_join(tbl_VIBI_Woody, tluspp, by = c("Scientific_Name" = "SCIENTIFIC_NAME")) |>
+  arrange(Scientific_Name, LocationID, EventID, Module_No) |> select(VIBI_Woody_ID, LocationID, EventID, Scientific_Name, Module_No, DiamID, Count)
+
+if(nrow(woody_miss) > 0){
+  assign("unmatched_woody_spp", woody_miss, envir = .GlobalEnv)
+}
+
 QC_table <- rbind(QC_table,
-                  QC_check(df, "", ""))
+                  QC_check(woody_miss, "VIBI Woody", paste0("Species in tbl_VIBI_Woody that are not in the ", spp_list, " species list.")))
 
-tbl_df <- make_kable(df, "")
+tbl_woody_miss <- make_kable(woody_miss, paste0("Species in tbl_VIBI_Woody that are not in the ", spp_list, " species list.",
+                                                "Output data frame is saved as 'unmatched_woody_spp' in global environment for easier review."))
+
+# Find species that have only been recorded once
+woody_once1 <- tbl_VIBI_Woody |> group_by(Scientific_Name) |>
+  summarize(num_recs = sum(!is.na(Count))) |> filter(num_recs == 1) |> select(Scientific_Name)
+
+woody_once <- tbl_VIBI_Woody |> filter(Scientific_Name %in% woody_once1$Scientific_Name) |> arrange(Scientific_Name, LocationID, EventID)
+
+QC_table <- rbind(QC_table,
+                  QC_check(woody_once, "VIBI Woody", "Species that have only been recorded once in tbl_VIBI_Woody."))
+
+tbl_woody_once <- make_kable(woody_once, "Species that have only been recorded once in tbl_VIBI_Woody. Not necessarily an error, but good to check.")
 
 # check if Woody checks returned at least 1 record to determine whether to include that tab in report
-woody_check <- QC_table |> filter(Data %in% "Woody" & Num_Records > 0)
+woody_check <- QC_table |> filter(Data %in% "VIBI Woody" & Num_Records > 0)
 woody_include <- tab_include(woody_check)
 
 #----- Big Trees -----
-# Find FeatureIDs in Big Trees that don't match Locations via LocationID
-
+# Check for blanks in ScientificName or DBH
+bigt_blanks <- tbl_BigTrees |> filter(is.na(Scientific_Name) | is.na(DBH))
 
 QC_table <- rbind(QC_table,
-                  QC_check(df, "", ""))
+                  QC_check(bigt_blanks, "Big Trees", "Blanks in Scientific_Name or DBH fields in tbl_BigTrees."))
 
-tbl_df <- make_kable(df, "")
+tbl_bigt_blanks <- make_kable(bigt_blanks, "Blanks in Scientific_Name or DBH fields in tbl_BigTrees.")
 
 # Check on BigTree counts that don't match between Woody and BigTree tables.
+bigt_sum <- tbl_BigTrees |> group_by(LocationID, EventID, ModNo, Scientific_Name) |>
+  summarize(count_bigt = sum(!is.na(DBH)), .groups = 'drop')
 
-# Check for duplicate species within a given module
+wood_comb <- full_join(tbl_VIBI_Woody |> filter(DiamID %in% c("BIG", "Big")),
+                       bigt_sum,
+                       by = c("LocationID", "EventID", "Module_No" = "ModNo",
+                              "Scientific_Name")) |>
+  filter(Count != count_bigt) |>
+  select(VIBI_Woody_ID, LocationID, EventID, Module_No, Scientific_Name, Count_Woody = Count, Count_BigTrees = count_bigt) |>
+  arrange(LocationID, EventID, Scientific_Name)
+
 QC_table <- rbind(QC_table,
-                  QC_check(df, "", ""))
+                  QC_check(woody_comb, "Big Trees", "Counts between tbl_VIBI_Woody and tbl_BigTrees that don't match."))
 
-tbl_df <- make_kable(df, "")
+tbl_woody_comb <- make_kable(woody_comb, "Counts between tbl_VIBI_Woody and tbl_BigTrees that don't match.")
 
 # Check for negative DBH values
-QC_table <- rbind(QC_table,
-                  QC_check(df, "", ""))
+bigt_neg <- tbl_BigTrees |> filter(DBH < 0)
 
-tbl_df <- make_kable(df, "")
+QC_table <- rbind(QC_table,
+                  QC_check(bigt_neg, "Big Trees", "Negative DBH values, likely indicating a flag."))
+
+tbl_bigt_neg <- make_kable(bigt_neg, "Negative DBH values, likely indicating a flag.")
 
 # Find DBH > 99% of ever recorded
-QC_table <- rbind(QC_table,
-                  QC_check(df, "", ""))
+dbh_99a <- tbl_BigTrees |>
+  filter(DBH > 0) |>
+  mutate(DBH_99pct = quantile(DBH, probs = 0.99, na.rm = T)) |>
+  filter(DBH > DBH_99pct)
 
-tbl_df <- make_kable(df, "")
+dbh_99 <- dbh_99a |> arrange(DBH, LocationID, ModNo, Scientific_Name) |>
+  select(ID, EventID, LocationID, ModNo, Scientific_Name, DBH, DBH_99pct)
+
+QC_table <- rbind(QC_table,
+                  QC_check(dbh_99, "Big Trees", "DBH measurements that are >99% of all that have been recorded."))
+
+tbl_dbh_99 <- make_kable(dbh_99, "DBH measurements that are >99% of all that have been recorded. Not necessarily an error, but good to check")
+
 
 # Find species recorded that are not on tlu_WetlndSpecies_List
-QC_table <- rbind(QC_table,
-                  QC_check(df, "", ""))
+bigt_miss <- anti_join(tbl_BigTrees, tluspp, by = c("Scientific_Name" = "SCIENTIFIC_NAME")) |>
+  arrange(Scientific_Name, LocationID, EventID, ModNo) |> select(ID, EventID, LocationID, ModNo, Scientific_Name, DBH)
 
-tbl_df <- make_kable(df, "")
+QC_table <- rbind(QC_table,
+                  QC_check(bigt_miss, "Big Trees", paste0("Species in tbl_BigTrees that are not in the ", spp_list, " species list.")))
+
+tbl_bigt_miss <- make_kable(bigt_miss, paste0("Species in tbl_BigTrees that are not in the ", spp_list, " species list."))
+
+# Find species that have only been recorded once
+bigt_once1 <- tbl_BigTrees |> group_by(Scientific_Name) |>
+  summarize(num_recs = sum(!is.na(DBH))) |> filter(num_recs == 1) |> select(Scientific_Name)
+
+bigt_once <- tbl_BigTrees |> filter(Scientific_Name %in% bigt_once1$Scientific_Name) |> arrange(Scientific_Name, LocationID, EventID)
+
+QC_table <- rbind(QC_table,
+                  QC_check(bigt_once, "Big Trees", "Species that have only been recorded once in tbl_BigTrees."))
+
+tbl_bigt_once <- make_kable(bigt_once, "Species that have only been recorded once in tbl_BigTrees. Not necessarily an error, but good to check.")
 
 # check if Big Tree checks returned at least 1 record to determine whether to include that tab in report
 bigt_check <- QC_table |> filter(Data %in% "Big Trees" & Num_Records > 0)
 bigt_include <- tab_include(bigt_check)
-#----- Biomass -----
-# Find FeatureIDs in Herbs that don't match Locations via LocationID
-QC_table <- rbind(QC_table,
-                  QC_check(df, "", ""))
 
-tbl_df <- make_kable(df, "")
+#----- Biomass -----
+# Find blanks in DryWt
+bmass_blanks <- tbl_VIBI_Herb_Biomass |> filter(is.na(DryWt))
+
+QC_table <- rbind(QC_table,
+                  QC_check(bmass_blanks, "VIBI Biomass", "Blanks in DryWt field in tbl_VIBI_Herb_Biomass."))
+
+tbl_bmass_blanks <- make_kable(bmass_blanks, "Blanks in DryWt field in tbl_VIBI_Herb_Biomass.")
 
 # Find biomass eventIDs that don't have corresponding herb eventIDs for a given year
-QC_table <- rbind(QC_table,
-                  QC_check(df, "", ""))
+non_evs <- sample_evs3 |> filter(!(Herbs %in% "X" & Biomass %in% "X")) |> select(-Woody, -BigTrees) |> filter(Biomass %in% "X")
 
-tbl_df <- make_kable(df, "")
+if(nrow(non_evs) > 0){
+  assign("unmatched_biomass_events", non_evs, envir = .GlobalEnv)
+}
+
+QC_table <- rbind(QC_table,
+                  QC_check(non_evs, "VIBI Biomass",
+                           paste0("Biomass sampling events that don't have a corresponding Herb sampling event in the same year. ",
+                                  "Out data frame is saved as 'unmatched_biomass_events' in global environment for easier review.")))
+
+tbl_non_evs <- make_kable(non_evs, paste0("Biomass sampling events that don't have a corresponding Herb sampling event in the same year. ",
+                                          "Out data frame is saved as 'unmatched_biomass_events' in global environment for easier review."))
+
+# Check for negative biomass weights
+bmass_neg <- tbl_VIBI_Herb_Biomass |> filter(DryWt < 0)
+
+QC_table <- rbind(QC_table,
+                  QC_check(bmass_neg, "VIBI Biomass", "Negative DryWt value in tbl_VIBI_Herb_Biomass, likely a flag."))
+
+tbl_bmass_neg <- make_kable(bmass_neg, "Negative DryWt value in tbl_VIBI_Herb_Biomass, likely a flag.")
+
+# Check for duplicate samples within a given module/corner
+bmass_dups <- tbl_VIBI_Herb_Biomass |> group_by(LocationID, EventID, Module, Corner) |>
+  summarize(counts = sum(!is.na(DryWt)), .groups = 'drop') |> filter(counts > 1)
+
+QC_table <- rbind(QC_table,
+                  QC_check(bmass_dups, "VIBI Biomass", "Duplicate DryWt records within the same LocationID, EventID, Module, and Corner."))
+
+tbl_bmass_dups <- make_kable(bmass_dups, "Duplicate DryWt records within the same LocationID, EventID, Module, and Corner.")
+
+# Find biomass weights > 99% recorded
+wt_99a <- tbl_VIBI_Herb_Biomass |>
+  filter(DryWt > 0) |>
+  mutate(wt_99pct = quantile(DryWt, probs = 0.99, na.rm = T)) |>
+  filter(DryWt > wt_99pct)
+
+wt_99 <- wt_99a |> arrange(LocationID, Module, Corner) |>
+  select(VIBI_Herb_Biomass_ID, EventID, LocationID, Module, Corner, DryWt, wt_99pct)
+
+QC_table <- rbind(QC_table,
+                  QC_check(wt_99, "VIBI Biomass", "Dry Weights that are >99% of all weights that have been recorded."))
+
+tbl_wt_99 <- make_kable(wt_99, "Dry Weights that are >99% of all weights that have been recorded.")
 
 # check if Biomass checks returned at least 1 record to determine whether to include that tab in report
-biomass_check <- QC_table |> filter(Data %in% "Biomass" & Num_Records > 0)
+biomass_check <- QC_table |> filter(Data %in% "VIBI Biomass" & Num_Records > 0)
 biomass_include <- tab_include(biomass_check)
 
 #----- Species list -----
@@ -406,3 +549,14 @@ tbl_df <- make_kable(df, "")
 # check if species list checks returned at least 1 record to determine whether to include that tab in report
 spp_check <- QC_table |> filter(Data %in% "Species List" & Num_Records > 0)
 spp_include <- tab_include(spp_check)
+
+#+++++ Compile final QC Table
+QC_check_table <-  kable(QC_table, format = 'html', align = 'c', caption = "QC checking results",
+                         col.names = c("Data Tab", "Check Description", "Number of Records")) |>
+  kable_styling(fixed_thead = TRUE, bootstrap_options = c('condensed'),
+                full_width = TRUE, position = 'left', font_size = 12) |>
+  row_spec(0, extra_css = "border-top: 1px solid #000000; border-bottom: 1px solid #000000;") |>
+  column_spec(2:ncol(QC_table), background = ifelse(QC_table$Num_Records > 0, "#F2F2A0", "#ffffff")) |>
+  collapse_rows(1, valign = 'top') |>
+  row_spec(nrow(QC_table), extra_css = 'border-bottom: 1px solid #000000;') |>
+  column_spec(2, width = "150px")
