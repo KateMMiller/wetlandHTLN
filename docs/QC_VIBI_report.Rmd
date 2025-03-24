@@ -9,7 +9,7 @@ output:
 params:
   year_curr: 2023 # Current year of sampling
   all_years: TRUE # If FALSE, only reports on year_curr; TRUE reports on all years
-  spp_list: "FQAI" # If FQAI, matches species in database against OH EPA spp. list. If DB, matches against tlu_WetlndSpeciesList 
+  spp_list: "FQAI" # If FQAI, matches species in database against OH EPA spp. list. If "DB", matches against tlu_WetlndSpeciesList. Once tlu_WetlndSpeciesList is cleaned up, switch this to "DB". 
   
 ---
 
@@ -102,6 +102,8 @@ cat("### VIBI Herbs {.tabset}", "\n\n")
 
 check_null_print(tbl_herb_blanks, 4, "Herb blanks")
 
+check_null_print(tbl_herb_locid, 4, "LocationID issues")
+
 check_null_print(tbl_herb_dups, 4, "Duplicate spp.")
 
 check_null_print(tbl_herb_miss, 4, "Missing spp.")
@@ -113,12 +115,31 @@ cat("\n\n")
 ```
 
 
+```{r eval = biomass_include, results = 'asis'}
+cat("### VIBI Biomass {.tabset}", "\n\n")
+
+check_null_print(tbl_bmass_blanks, 4, "Biomass blanks")
+
+check_null_print(tbl_non_evs, 4, "Unmatched EventIDs")
+
+check_null_print(tbl_bmass_locid, 4, "LocationID issues")
+
+check_null_print(tbl_bmass_neg, 4, "Negative DryWt")
+
+check_null_print(tbl_bmass_dups, 4, "Duplicate DryWt")
+
+check_null_print(tbl_wt_99, 4, "DryWt 99pct")
+
+```
+
 ```{r eval = woody_include, results = "asis"}
 cat("### VIBI Woody {.tabset}", "\n\n")
 
 check_null_print(tbl_woody_fid_check, 4, "FeatureIDs")
 
 check_null_print(tbl_woody_blanks, 4, "Woody blanks")
+
+check_null_print(tbl_woody_locid, 4, "LocationID issues")
 
 check_null_print(tbl_woody9s, 4, "-9999 counts")
 
@@ -143,6 +164,8 @@ cat("### Big Trees {.tabset}", "\n\n")
 
 check_null_print(tbl_woody_comb, 4, "BigTree counts")
 
+check_null_print(tbl_bigt_locid, 4, "LocationID issues")
+
 check_null_print(tbl_bigt_blanks, 4, "BigTree blanks")
 
 check_null_print(tbl_bigt_neg, 4, "Negative DBH")
@@ -157,18 +180,15 @@ cat("\n\n")
 
 ```
 
-```{r eval = biomass_include}
-cat("### Biomass {.tabset}", "\n\n")
+```{r eval = spp_include, results = 'asis'}
+cat("### Species List {.tabset}", "\n\n")
 
-check_null_print(tbl_bmass_blanks, 4, "Biomass blanks")
+check_null_print(tbl_adv_check, 4, "Adventive check")
 
-check_null_print(tbl_non_evs, 4, "Unmatched EventIDs")
+check_null_print(tbl_miss_spp, 4, "Unmatched data in tluWSL")
 
-check_null_print(tbl_bmass_neg, 4, "Negative DryWt")
+check_null_print(tbl_miss_spp2, 4, "Unmatched tluWSL and FQAI")
 
-check_null_print(tbl_bmass_dups, 4, "Duplicate DryWt")
-
-check_null_print(tbl_wt_99, 4, "DryWt 99pct")
-
+cat("\n\n")
 ```
 
