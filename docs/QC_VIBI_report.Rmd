@@ -60,7 +60,7 @@ check_null_print(tbl_conflict_domveg, 4, "DomVeg conflict")
 
 check_null_print(tbl_area_error, 4, "AreaHA vs TotMods")
 
-check_null_print(tbl_intern_check, 4, "InternMods vs TotalMods")
+check_null_print(tbl_intern_check, 4, "Intern vs TotalMods")
 
 
 
@@ -93,4 +93,19 @@ check_null_print(tbl_herb_miss, 4, "Missing spp.")
 check_null_print(tbl_herb_once, 4, "One-timers")
 ```
 
+
+```{r eval = woody_include, results = "asis"}
+cat("### VIBI Woody {.tabset}", "\n\n")
+
+check_null_print(tbl_woody_fid_check, 4, "FeatureIDs")
+
+check_null_print(tbl_woody_blanks, 4, "Woody blanks")
+
+check_null_print(tbl_woody9s, 4, "-9999 counts")
+
+check_null_print(tbl_diamid_check, 4, "DiamIDs")
+
+
+
+```
 

@@ -269,13 +269,23 @@ QC_table <- rbind(QC_table,
 tbl_woody_fid_check <- make_kable(woody_fid_check, "FeatureIDs in tbl_VIBI_Woody that don't match FeatureIDs in tbl_Locations, based on join of LocationID field. If two FeatureIDs look identical, there's likely a space in one of them, which R reads as different.")
 
 # Check for blanks in ScientificName, DiamID, and Count
-woody_blank
+woody_blanks <- tbl_VIBI_Woody |> filter(is.na(Scientific_Name) | is.na(Count) | is.na(DiamID))
 
 
 QC_table <- rbind(QC_table,
-                  QC_check(df, "", ""))
+                  QC_check(woody_blanks, "Woody", "Blanks in Scientific_Name, DiamID, or Count fields in tbl_VIBI_Woody."))
 
-tbl_df <- make_kable(df, "")
+tbl_woody_blanks <- make_kable(woody_blanks, "Blanks in Scientific_Name, DiamID, or Count fields in tbl_VIBI_Woody.")
+
+# Check for -9999 Counts
+woody9s <- tbl_VIBI_Woody |> filter(Count < 0)
+
+QC_table <- rbind(QC_table,
+                  QC_check(woody9s, "Woody", "Negative 9999 counts, indicating flag."))
+
+tbl_woody9s <- make_kable(woody9s, "Negative 9999 counts, indicating a flag..")
+
+# Check for DiamIDs that don't match tlu b/c of capitalization
 
 
 # Check for duplicate species within a given module
@@ -320,6 +330,8 @@ woody_include <- tab_include(woody_check)
 
 #----- Big Trees -----
 # Find FeatureIDs in Big Trees that don't match Locations via LocationID
+
+
 QC_table <- rbind(QC_table,
                   QC_check(df, "", ""))
 
