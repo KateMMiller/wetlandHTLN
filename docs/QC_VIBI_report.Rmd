@@ -9,6 +9,7 @@ output:
 params:
   year_curr: 2023 # Current year of sampling
   all_years: TRUE # If FALSE, only reports on year_curr; TRUE reports on all years
+  spp_list: "FQAI" # If FQAI, matches species in database against OH EPA spp. list. If DB, matches against tlu_WetlndSpeciesList 
   
 ---
 
@@ -27,6 +28,8 @@ library(kableExtra)
 importData()
 year_curr = params$year_curr
 year_range = if(params$all_years == TRUE){2008:year_curr} else {year_curr}
+
+spp_list <- params$spp_list
 
 #arglist <- list(park = park, years = year)
 
@@ -76,3 +79,18 @@ check_null_print(tbl_odd_dates2, 4, "StartDate2")
 
 
 ```
+
+
+```{r eval = herb_include, results = "asis"}
+cat("### VIBI Herbs {.tabset}", "\n\n")
+
+check_null_print(tbl_herb_blanks, 4, "Herb blanks")
+
+check_null_print(tbl_herb_dups, 4, "Duplicate spp.")
+
+check_null_print(tbl_herb_miss, 4, "Missing spp.")
+
+check_null_print(tbl_herb_once, 4, "One-timers")
+```
+
+

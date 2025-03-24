@@ -55,6 +55,28 @@ check_null_print <- function(table, tab_level = 4, tab_title){
   check_null(table)
 }
 
+#----- Compile Data -----
+# import database tables to check raw data (ie, not views)
+tryCatch(
+  db <- DBI::dbConnect(drv = odbc::odbc(), dsn = "HTLNWetlands"),
+  error = function(e){stop(paste0("Unable to connect to DSN to check tbl_SamplingEvents vs tbl_SamplingPeriods."))})
+tbls <- c("tbl_SamplingEvents", "tbl_SamplingPeriods", "tbl_VIBI_Herb",
+          "tbl_VIBI_Herb_Biomass", "tbl_VIBI_Woody", "tbl_BigTrees",
+          "tlu_WetlndSpeciesList")
+tbl_import <- lapply(seq_along(tbls), function(x){
+  tab1 <- tbls[x]
+  tab <- DBI::dbReadTable(db, tab1)
+  return(tab)})
+DBI::dbDisconnect(db)
+tbl_import <- setNames(tbl_import, tbls)
+list2env(tbl_import, envir = .GlobalEnv)
+
+tluspp <- if(spp_list == "FQAI"){
+  read.csv("https://raw.githubusercontent.com/KateMMiller/wetlandHTLN/refs/heads/main/data/FQAI_species_list.csv")
+} else {tlu_WetlndSpeciesList}
+
+head(tluspp) # SCIENTIFIC_NAME for FQAI
+
 #---- Individual View checking ----
 #----- Locations -----
 loc <- get("locations", env = HTLNwetlands)
@@ -132,19 +154,6 @@ loc_include <- tab_include(loc_check)
 #----- SamplingEvents/Periods/Locations checks -----
 # Find EventIDs in Herbs, Woody, BigTree, Biomass that are missing from the SamplingEvents table
 
-# import database tables to check raw IDs
-tryCatch(
-  db <- DBI::dbConnect(drv = odbc::odbc(), dsn = "HTLNWetlands"),
-  error = function(e){stop(paste0("Unable to connect to DSN to check tbl_SamplingEvents vs tbl_SamplingPeriods."))})
-  tbls <- c("tbl_SamplingEvents", "tbl_SamplingPeriods", "tbl_VIBI_Herb", "tbl_VIBI_Herb_Biomass", "tbl_VIBI_Woody", "tbl_BigTrees")
-  tbl_import <- lapply(seq_along(tbls), function(x){
-                         tab1 <- tbls[x]
-                         tab <- DBI::dbReadTable(db, tab1)
-                         return(tab)})
-DBI::dbDisconnect(db)
-tbl_import <- setNames(tbl_import, tbls)
-list2env(tbl_import, envir = .GlobalEnv)
-
 # Check that tbl_SamplingEvents$PeriodIDs are included in tbl_SamplingPeriods$PeriodID
 miss_periods <- tbl_SamplingEvents[!unique(tbl_SamplingEvents$PeriodID) %in% unique(tbl_SamplingPeriods$PeriodID),]
 
@@ -198,52 +207,190 @@ pev_check <- QC_table |> filter(Data %in% "Periods/Events" & Num_Records > 0)
 pev_include <- tab_include(pev_check)
 
 #----- Herbs -----
-# Find FeatureIDs in Herbs that don't match Locations via LocationID
-
 # Check for blanks in ScientificName and CovCode, include Comment_Herb
+herb_blanks <- tbl_VIBI_Herb |> filter(is.na(Species) | is.na(CovCode) | is.na(ModNo)) |>
+  select(VIBI_Herb_ID, EventID, LocationID, Species, ModNo, CovCov, Comments)
+
+QC_table <- rbind(QC_table,
+                  QC_check(herb_blanks, "VIBI Herbs", "tbl_SamplingEvents with StartDates that don't parse properly."))
+
+tbl_herb_blanks <- make_kable(herb_blanks, "tbl_SamplingEvents with StartDates that don't parse properly or don't make sense.")
 
 # Check for duplicate species within a given module
+herb_dups <- tbl_VIBI_Herb |> group_by(LocationID, EventID, ModNo, Species) |>
+  summarize(num_records = sum(!is.na(CovCode)), .groups = "drop") |>
+  filter(num_records != 1)
 
-# Find species recorded that are not on tlu_WetlndSpecies_List
+QC_table <- rbind(QC_table,
+                  QC_check(herb_dups, "VIBI Herbs", "Duplicate species records within the same LocationID, EventID, and Module."))
+
+tbl_herb_dups <- make_kable(herb_dups, "Duplicate species records within the same LocationID, EventID, and Module.")
+
+# Find species recorded that are not on FQAI list
+herb_miss <- anti_join(tbl_VIBI_Herb, tluspp, by = c("Species" = "SCIENTIFIC_NAME")) |>
+  arrange(Species, LocationID, EventID, ModNo) |> select(VIBI_Herb_ID, LocationID, EventID, Species, ModNo, Comments)
+
+if(nrow(herb_miss) > 0){
+  assign("unmatched_herb_spp", herb_miss, envir = .GlobalEnv)
+}
+
+QC_table <- rbind(QC_table,
+                  QC_check(herb_miss, "VIBI Herbs", paste0("Species in tbl_VIBI_Herb that are not in the ", spp_list, " species list.")))
+
+tbl_herb_miss <- make_kable(herb_miss, paste0("Species in tbl_VIBI_Herb that are not in the ", spp_list, " species list.",
+                                              "Note that output data frame is saved as 'unmatched_herb_spp' in global environment for easier review."))
+
+# Find species that have only been recorded once
+herb_once1 <- tbl_VIBI_Herb |> group_by(Species) |>
+  summarize(num_recs = sum(!is.na(CovCode))) |> filter(num_recs == 1) |> select(Species)
+
+herb_once <- tbl_VIBI_Herb |> filter(Species %in% herb_once1$Species) |> arrange(Species, LocationID, EventID)
+
+QC_table <- rbind(QC_table,
+                  QC_check(herb_once, "VIBI Herbs", "Species that have only been recorded once in tbl_VIBI_Herb. Not necessarily an error, but good to check."))
+
+tbl_herb_once <- make_kable(herb_once, "Species that have only been recorded once in tbl_VIBI_Herb. Not necessarily an error, but good to check.")
+
+# check if Herb checks returned at least 1 record to determine whether to include that tab in report
+herb_check <- QC_table |> filter(Data %in% "VIBI Herbs" & Num_Records > 0)
+herb_include <- tab_include(herb_check)
 
 #----- Woody -----
-# Find FeatureIDs in Herbs that don't match Locations via LocationID
+# Find FeatureIDs in Woody table that don't match Locations via LocationID
+woody_fid_check <- full_join(locv |> select(LocationID, FeatureID),
+                             tbl_VIBI_Woody |> select(LocationID, FeatureID),
+                             by = "LocationID",
+                             suffix = c("_loc", "_wdy")) |>
+  filter(FeatureID_loc != FeatureID_wdy)
+
+QC_table <- rbind(QC_table,
+                  QC_check(woody_fid_check, "Woody", "FeatureIDs in tbl_VIBI_Woody that don't match FeatureIDs in tbl_Locations."))
+
+tbl_woody_fid_check <- make_kable(woody_fid_check, "FeatureIDs in tbl_VIBI_Woody that don't match FeatureIDs in tbl_Locations, based on join of LocationID field. If two FeatureIDs look identical, there's likely a space in one of them, which R reads as different.")
 
 # Check for blanks in ScientificName, DiamID, and Count
+woody_blank
+
+
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
+
+tbl_df <- make_kable(df, "")
+
 
 # Check for duplicate species within a given module
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
+
+tbl_df <- make_kable(df, "")
 
 # Look for -9999 Counts
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
+
+tbl_df <- make_kable(df, "")
 
 # Check for DiamIDs that aren't capitalized.
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
+
+tbl_df <- make_kable(df, "")
 
 # Find counts > 99% of ever recorded per DiamID
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
+
+tbl_df <- make_kable(df, "")
 
 # Find counts > 99% overall
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
+
+tbl_df <- make_kable(df, "")
 
 # Find species recorded that are not on tlu_WetlndSpecies_List
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
+
+tbl_df <- make_kable(df, "")
+
+# check if Woody checks returned at least 1 record to determine whether to include that tab in report
+woody_check <- QC_table |> filter(Data %in% "Woody" & Num_Records > 0)
+woody_include <- tab_include(woody_check)
 
 #----- Big Trees -----
-# Find FeatureIDs in Herbs that don't match Locations via LocationID
+# Find FeatureIDs in Big Trees that don't match Locations via LocationID
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
+
+tbl_df <- make_kable(df, "")
+
+# Check on BigTree counts that don't match between Woody and BigTree tables.
 
 # Check for duplicate species within a given module
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
+
+tbl_df <- make_kable(df, "")
 
 # Check for negative DBH values
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
+
+tbl_df <- make_kable(df, "")
 
 # Find DBH > 99% of ever recorded
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
+
+tbl_df <- make_kable(df, "")
 
 # Find species recorded that are not on tlu_WetlndSpecies_List
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
 
+tbl_df <- make_kable(df, "")
 
+# check if Big Tree checks returned at least 1 record to determine whether to include that tab in report
+bigt_check <- QC_table |> filter(Data %in% "Big Trees" & Num_Records > 0)
+bigt_include <- tab_include(bigt_check)
 #----- Biomass -----
 # Find FeatureIDs in Herbs that don't match Locations via LocationID
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
+
+tbl_df <- make_kable(df, "")
 
 # Find biomass eventIDs that don't have corresponding herb eventIDs for a given year
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
+
+tbl_df <- make_kable(df, "")
+
+# check if Biomass checks returned at least 1 record to determine whether to include that tab in report
+biomass_check <- QC_table |> filter(Data %in% "Biomass" & Num_Records > 0)
+biomass_include <- tab_include(biomass_check)
 
 #----- Species list -----
 # check that OH_STATUS == "adventive" and SHADE = "advent" match
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
+
+tbl_df <- make_kable(df, "")
 
 # Find species recorded in Herb and Woody tables that aren't on FQAI list- will continue to use this
 # to find species added during sampling.
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
+
+tbl_df <- make_kable(df, "")
 
 # Find species on tlu_WetlndSpecies_list that aren't on FQAI list
+QC_table <- rbind(QC_table,
+                  QC_check(df, "", ""))
+
+tbl_df <- make_kable(df, "")
+
+# check if species list checks returned at least 1 record to determine whether to include that tab in report
+spp_check <- QC_table |> filter(Data %in% "Species List" & Num_Records > 0)
+spp_include <- tab_include(spp_check)
