@@ -45,6 +45,20 @@ Wetland Quality Control checking for CUVA and `r paste(year_curr, collapse = ", 
 source('QC_VIBI_report_compile.R')
 ```
 
+### QC checks {.tabset}
+#### Summary {.tabset}
+The table below documents Quality Control checks performed on VIBI-related wetland data, along with number of records returned on each check. If any records were returned for a given check, the row is highlighted yellow in the table, and a separate tab corresponding to that check will appear within its associated Data Tab. 
+```{r}
+QC_check_table
+```
+
+#### Sampling Matrix
+The following table shows the matrix for every  
+```{r}
+tbl_sample_evs
+```
+
+
 ```{r eval = loc_include, results = "asis"}
 cat("### Locations {.tabset}", "\n\n")
 
@@ -62,9 +76,10 @@ check_null_print(tbl_area_error, 4, "AreaHA vs TotMods")
 
 check_null_print(tbl_intern_check, 4, "Intern vs TotalMods")
 
-
+cat("\n\n")
 
 ```
+
 
 ```{r eval = pev_include, results = "asis"}
 cat("### Sampling Periods/Events {.tabset}", "\n\n")
@@ -77,6 +92,7 @@ check_null_print(tbl_odd_dates1, 4, "StartDate1")
 
 check_null_print(tbl_odd_dates2, 4, "StartDate2")
 
+cat("\n\n")
 
 ```
 
@@ -91,6 +107,9 @@ check_null_print(tbl_herb_dups, 4, "Duplicate spp.")
 check_null_print(tbl_herb_miss, 4, "Missing spp.")
 
 check_null_print(tbl_herb_once, 4, "One-timers")
+
+cat("\n\n")
+
 ```
 
 
@@ -105,7 +124,51 @@ check_null_print(tbl_woody9s, 4, "-9999 counts")
 
 check_null_print(tbl_diamid_check, 4, "DiamIDs")
 
+check_null_print(tbl_woody_dups, 4, "Duplicate spp.")
 
+check_null_print(tbl_diam_99, 4, "DiamID 99pct")
+
+check_null_print(tbl_count_99, 4, "Counts 99pct")
+
+check_null_print(tbl_woody_miss, 4, "Missing spp.")
+
+check_null_print(tbl_woody_once, 4, "One-timers")
+
+cat("\n\n")
+
+```
+
+```{r eval = bigt_include, results = "asis"}
+cat("### Big Trees {.tabset}", "\n\n")
+
+check_null_print(tbl_woody_comb, 4, "BigTree counts")
+
+check_null_print(tbl_bigt_blanks, 4, "BigTree blanks")
+
+check_null_print(tbl_bigt_neg, 4, "Negative DBH")
+
+check_null_print(tbl_dbh_99, 4, "DBH 99pct")
+
+check_null_print(tbl_bigt_miss, 4, "Missing spp.")
+
+check_null_print(tbl_bigt_once, 4, "One-timers")
+
+cat("\n\n")
+
+```
+
+```{r eval = biomass_include}
+cat("### Biomass {.tabset}", "\n\n")
+
+check_null_print(tbl_bmass_blanks, 4, "Biomass blanks")
+
+check_null_print(tbl_non_evs, 4, "Unmatched EventIDs")
+
+check_null_print(tbl_bmass_neg, 4, "Negative DryWt")
+
+check_null_print(tbl_bmass_dups, 4, "Duplicate DryWt")
+
+check_null_print(tbl_wt_99, 4, "DryWt 99pct")
 
 ```
 
