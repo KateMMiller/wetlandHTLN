@@ -46,7 +46,7 @@ among sites with fewer than 4 modules. Averaging the module scores within a site
 NOTE 1: Because the results from sumVIBI are averages rather than sums (ie the VIBI spreadsheet), their
 scores will be lower than other datasets that use the VIBI spreadsheet, which are straight sums.
 
-NOTE 2: The Biomass metric assumes the area sampled is always 0.01m2. Currently, if there's only a biomass
+NOTE 2: The Biomass metric assumes the area sampled is always 0.1m2. Currently, if there's only a biomass
 record for a given year and no herb or woody data, those records are dropped.
 
 NOTE 3: Metric calculations and thresholds follow INTEGRATED WETLAND ASSESSMENT PROGRAM Part 9: Field Manual
@@ -73,8 +73,6 @@ vibi_emerg <- joinVIBI_module(dom_veg1 = "emergent")
 
 # calculate module-level VIBI for depressional wetlands
 vibi_dep <- joinVIBI_module(hgm_class = "Depression")
-
-# calculate
 
 
 }

@@ -41,7 +41,7 @@ Returns a data frame of average VIBI calculations for each plot
 \description{
 This function summarizes plot-level VIBI by averaging module-level VIBI scores, and
 filters by plot, year, and plot types. Note that the Biomass metric assumes the area sampled is
-always 0.01m2. Metric calculations and thresholds follow INTEGRATED WETLAND ASSESSMENT PROGRAM
+always 0.1m2. Metric calculations and thresholds follow INTEGRATED WETLAND ASSESSMENT PROGRAM
 Part 9: Field Manual for the Vegetation Index of Biotic Integrity for Wetlands v. 1.5.
 Pages 17 - 20 and Table 2 were most useful. For plot-level VIBI scores that are comparable with
 OH VIBI scores from other sites, use joinVIBI_plot(). Note however, that the joinVIBI_plot() only

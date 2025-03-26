@@ -2,7 +2,7 @@
 #'
 #' @importFrom dplyr filter
 #'
-#' @description This function filters big tree data by plot, year, plot types, species, and species groupings.
+#' @description This function filters big tree data by plot, year, plot types, and nativity.
 #'
 #' @param years Numeric. Filter on years of survey. Default is all.
 #'

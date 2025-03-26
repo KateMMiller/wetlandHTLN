@@ -39,7 +39,7 @@ Default is 1:4 (all).}
 Returns a data frame of bigtree count data
 }
 \description{
-This function filters big tree data by plot, year, plot types, species, and species groupings.
+This function filters big tree data by plot, year, plot types, and nativity.
 }
 \examples{
 \dontrun{

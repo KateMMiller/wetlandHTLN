@@ -14,7 +14,7 @@
 #' results that are comparable with other datasets that use the VIBI and are based on 4 intensive modules.
 #' For module-level VIBI scores, use joinVIBI_module.
 #'
-#' NOTE 2: The Biomass metric assumes the area sampled is always 0.01m2. Currently, if there's only a biomass
+#' NOTE 2: The Biomass metric assumes the area sampled is always 0.1m2. Currently, if there's only a biomass
 #' record for a given year and no herb or woody data, those records are dropped.
 #'
 #' NOTE 3: Metric calculations and thresholds follow INTEGRATED WETLAND ASSESSMENT PROGRAM Part 9: Field Manual
