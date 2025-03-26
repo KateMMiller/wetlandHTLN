@@ -18,3 +18,13 @@ Suggests:
     DBI,
     odbc
 RoxygenNote: 7.3.2
+Collate: 
+    'getBigTrees.R'
+    'getBiomass.R'
+    'getHerbs.R'
+    'getPlots.R'
+    'getWoody.R'
+    'importData.R'
+    'joinVIBI_module.R'
+    'joinVIBI_plot.R'
+    'sumVIBI.R'
