@@ -1,0 +1,141 @@
+---
+output: 
+  html_document:
+    css: www/styles.css
+title: "Using wetlandHTLN R pkg." 
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F)
+options(width = 10)
+```
+
+```{css echo = FALSE}
+.indent {
+margin-left: 25px;
+font-size: 14px;
+}
+
+.indent2 {
+margin-left: 50px;
+font-size: 12px;
+}
+
+.drop{
+  font-family: "Arial",Arial,sans-serif;
+  font-size: 16px;
+  font-weight: bold;
+  padding:0px 0px 0px 0px;
+  margin:0px 0px 0px 0px;
+}
+
+.fxn{
+  color:#1942B5;
+  font-size:14px;
+  font-weight: bold;
+}
+
+.title{
+ display:none;
+}
+/*
+h4{
+  color:#1942B5;
+}
+*/
+```
+
+
+```{r echo = F, include = F}
+print_head <- function(df){
+  knitr::kable(df[1:6,]) |> #, table.attr = "style='width:60%;'") |> 
+    kableExtra::kable_classic(full_width = F, font_size = 12, 
+                              bootstrap_options = c("condensed"))
+}
+library(tidyverse)
+```
+
+## Using the wetlandHTLN R package {.tabset .tabset-pills}
+
+### Getting started {.tabset}
+
+#### Installation
+<h4><b>Step 1.</b> Install R, RStudio, and RTools44 in Software Center</h4>
+<h4><b>Step 2.</b> Install devtools package in R:</h4>
+```{r, eval = F, class.source = "indent"}
+install.packages('devtools')
+```
+<h4><b>Step 3.</b> Install wetlandHTLN from GitHub</h4>
+Note that whenever the `wetlandHTLN` package is updated, you can rerun this code to install the latest version.
+```{r, eval = F, class.source = "indent"}
+library(devtools)
+install_github("KateMMiller/wetlandHTLN")
+```
+<h4><b>Step 4.</b> Load wetlandHTLN R package</h4>
+```{r, class.source = "indent"}
+library(wetlandHTLN)
+```
+<h4><b>Step 5.</b> Import wetland monitoring data</h4>
+Note that R is not able to connect to files on Sharepoint or MS Teams (b/c Teams also stores all files on Sharepoint). That means you need to store the database (and eventually the data package files) on your local machine, OneDrive, or HTLN server. The `importData()` function defaults are to import required data tables from the HTLNwetlands Access database and then compile the data package views (i.e. flatfiles) for use with the R package. Once the data package is published, I'll add importing data package views as an option in this function.
+
+To keep your workspace clean (i.e. the top right panel with the Environment tab) in R, the default setting for `importData()` is to import data files into an environment called HTLNwetlands. If you would rather import each individual view into your R session, specify with the new_env argument (e.g., `importData(new_env = F)`). To import data using the default settings (i.e. run `importData()` with no arguments), you must have the HTLNwetlands access database set as a User DSN called HTLNwetlands (see "Setting up DSN" tab for more details).  
+
+Currently, the `importData()` function only imports views related to the VIBI. Over time, options to compile/import views for ORAM and hydrology will be added.  
+
+<p class = 'indent'>
+<span style='color:#1942B5;'><b>Option 1.</b> Import data using default settings, which imports from DSN named *HTLNwetlands*.</span></p>
+```{r echo = F, results = 'hide', include = F}
+importData() 
+importData(type = "DSN", odbc = "HTLNwetlands", data_type = "vibi") # equivalent to previous line
+```
+
+<p class = 'indent'>
+<span style='color:#1942B5;'><b>Option 2.</b> Import data from a specified database.</span></p>
+```{r}
+importData(type ='dbfile',
+   filepath = 'C:/Users/KMMiller/OneDrive - DOI/MWR/HTLN_wetlands/VIBI/HTLNWetlands3.4.1.accdb')
+```
+
+Additional import options will be added as the data package is completed for VIBI, and as ORAM and hydrology import features are added, including the ability to export views as csvs and/or a zipped file containing csvs.
+
+<h4><b>Step 6.</b> Play with the data </h4>
+The functions in the `wetlandHTLN` package are designed to work with the views, and are the best way to interact with the data to query by park, site, site type, year, parameter, etc. However, if you want to view the raw data, and you imported the data into the ROCKY environment, you can access them with the code below:
+```{r eval = F}
+# See list of the views
+names(HTLNwetlands)
+
+# Look at one of the views
+View(HTLNwetlands$herbVIBI)
+
+# See top 6 records 
+head(HTLNwetlands$herbVIBI)
+
+# Check structure of view
+str(HTLNwetlands$woodyVIBI)
+
+# Assign a view to a data frame named herbs in R. Interact with herbs the way you would work with any normal data frame in R. 
+herbs <- HTLNwetlands$herbVIBI
+
+```
+While this works, the better approach is to use the "getter" functions within the R package, which access the same files, but allow you to also query data based on park, location, years, plot name, species, etc. See the specific getter function tabs for details. 
+
+If you want to use the `print_head()` function that shows output in this markdown, run the code below. This makes the results print cleaner in the markdown report. For your purposes, you can just run: `head(dataframe)`.
+```{r}
+print_head <- function(df){
+  knitr::kable(df[1:6,]) |> #, table.attr = "style='width:60%;'") |> 
+    kableExtra::kable_classic(full_width = F, font_size = 12, 
+                              bootstrap_options = c("condensed"))
+}
+
+```
+
+<h4><b>Troubleshooting Built Tools:</b></h4> If you're contributing to the package, you'll need to use build tools to build and install the package to test changes before posting to GitHub. Unfortunately Software Center installs RTools44 in C:/Program Files/, not C:/, which is where RStudio looks for it by default. The following code helps RStudio find RTools. You may occasionally have to rerun this code (except for the usethis line), so keep it handy. You know when you have to rerun the code when you try to rebuild a package, and a window pops up to ask if you want to install missing build files. 
+
+```{r echo = T, eval = F}
+# Set r environ to find rtools on opening
+usethis::edit_r_environ()
+Sys.setenv(PATH = paste("C:\\PROGRA~1\\Rtools44\\bin", Sys.getenv("PATH"), sep=";"))
+Sys.setenv(BINPREF = "C:\\PROGRA~1\\Rtools44\\mingw_$(WIN)\\bin\\")
+```
+
