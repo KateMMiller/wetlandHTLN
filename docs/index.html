@@ -654,15 +654,17 @@ related to the VIBI. Over time, options to compile/import views for ORAM
 and hydrology will be added.</p>
 <p class="indent">
 <span style="color:#1942B5;"><b>Option 1.</b> Import data using default
-settings, which imports from DSN named <em>HTLNwetlands</em>.</span>
+settings, which imports from DSN named
+<strong>HTLNwetlands</strong>.</span>
 </p>
+<pre class="r"><code>importData() 
+importData(type = &quot;DSN&quot;, odbc = &quot;HTLNwetlands&quot;, data_type = &quot;vibi&quot;) # equivalent to previous line</code></pre>
 <p class="indent">
 <span style="color:#1942B5;"><b>Option 2.</b> Import data from a
 specified database.</span>
 </p>
 <pre class="r"><code>importData(type =&#39;dbfile&#39;,
    filepath = &#39;C:/Users/KMMiller/OneDrive - DOI/MWR/HTLN_wetlands/VIBI/HTLNWetlands3.4.1.accdb&#39;)</code></pre>
-<pre><code>##   |        ||   0%  |        ||   9%  |        ||  18%  |        ||  27%  |        ||  36%  |        ||  45%  |        ||  55%  |        ||  64%  |        ||  73%  |        ||  82%  |        ||  91%  |        || 100%</code></pre>
 <p>Additional import options will be added as the data package is
 completed for VIBI, and as ORAM and hydrology import features are added,
 including the ability to export views as csvs and/or a zipped file
@@ -40774,10 +40776,10 @@ due to differences between the species list in the tlu_WetlndSpeciesList
 lookup table in the HTLNwetlands database, and the species list in the
 FQAI list in the spreadsheet (particularly species added to or tweaked
 on the spreadsheet FQAI list).</p>
-<p><em>THIS FUNCTION ONLY WORKS ON PLOTS THAT HAVE 4 INTENSIVE MODULES
-SAMPLED. </em> This function is intended to provide results that are
-comparable with other datasets that use the VIBI and are based on 4
-intensive modules. For module-level VIBI scores, including for
+<p><strong>THIS FUNCTION ONLY WORKS ON PLOTS THAT HAVE 4 INTENSIVE
+MODULES SAMPLED.</strong> This function is intended to provide results
+that are comparable with other datasets that use the VIBI and are based
+on 4 intensive modules. For module-level VIBI scores, including for
 comparisons among sites with fewer than 4 intensive modules, use
 <code>joinVIBI_module()</code>.</p>
 <p>NOTE 1: The Biomass metric assumes the area sampled is always 0.1m2.

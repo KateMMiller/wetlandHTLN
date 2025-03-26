@@ -86,15 +86,15 @@ To keep your workspace clean (i.e. the top right panel with the Environment tab)
 Currently, the `importData()` function only imports views related to the VIBI. Over time, options to compile/import views for ORAM and hydrology will be added.  
 
 <p class = 'indent'>
-<span style='color:#1942B5;'><b>Option 1.</b> Import data using default settings, which imports from DSN named *HTLNwetlands*.</span></p>
-```{r echo = F, results = 'hide', include = F}
+<span style='color:#1942B5;'><b>Option 1.</b> Import data using default settings, which imports from DSN named **HTLNwetlands**.</span></p>
+```{r results = 'hide'}
 importData() 
 importData(type = "DSN", odbc = "HTLNwetlands", data_type = "vibi") # equivalent to previous line
 ```
 
 <p class = 'indent'>
 <span style='color:#1942B5;'><b>Option 2.</b> Import data from a specified database.</span></p>
-```{r}
+```{r, results = 'hide'}
 importData(type ='dbfile',
    filepath = 'C:/Users/KMMiller/OneDrive - DOI/MWR/HTLN_wetlands/VIBI/HTLNWetlands3.4.1.accdb')
 ```
@@ -502,7 +502,7 @@ print_head(vibi_ref)
 #### joinVIBI_plot()
 This function summarizes plot-level VIBI and filters by plot, year, and plot types. This function most closely matches the OH EPA VIBI spreadsheet calculations. Slight differences in VIBI calculations are due to differences between the species list in the tlu_WetlndSpeciesList lookup table in the HTLNwetlands database, and the species list in the FQAI list in the spreadsheet (particularly species added to or tweaked on the spreadsheet FQAI list). 
 
-*THIS FUNCTION ONLY WORKS ON PLOTS THAT HAVE 4 INTENSIVE MODULES SAMPLED. * This function is intended to provide results that are comparable with other datasets that use the VIBI and are based on 4 intensive modules. For module-level VIBI scores, including for comparisons among sites with fewer than 4 intensive modules, use `joinVIBI_module()`.
+**THIS FUNCTION ONLY WORKS ON PLOTS THAT HAVE 4 INTENSIVE MODULES SAMPLED.** This function is intended to provide results that are comparable with other datasets that use the VIBI and are based on 4 intensive modules. For module-level VIBI scores, including for comparisons among sites with fewer than 4 intensive modules, use `joinVIBI_module()`.
 
 NOTE 1: The Biomass metric assumes the area sampled is always 0.1m2. Currently, if there's only a biomass record for a given year and no herb or woody data, those records are dropped.
 
