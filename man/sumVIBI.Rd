@@ -36,7 +36,7 @@ Options are "EMP", "MW", and "NCNE".}
 Default is 1:4 (all).}
 }
 \value{
-Returns a data frame of VIBI calculations for each module of each plot
+Returns a data frame of average VIBI calculations for each plot
 }
 \description{
 This function summarizes plot-level VIBI by averaging module-level VIBI scores, and
@@ -48,25 +48,25 @@ OH VIBI scores from other sites, use joinVIBI_plot(). Note however, that the joi
 rates sites with 4 intensive modules. This function allows sites with fewer than 4 modules to be
 assessed on the same scale as sites with 4 modules. The VIBI scores with this function will be lower
 than the original VIBI spreadsheet approach, because the VIBI spreadsheet sums across the 4 modules,
-rather than averages.
+rather than averages. VIBI scores are applied after the module-level metrics are averaged to a plot-level value.
 }
 \examples{
 \dontrun{
 # run first
 importData()
 
-# calculate module-level VIBI for all sites (default).
-vibi <- joinVIBI_module()
+# average modules to plot-level VIBI for all sites (default).
+vibi <- sumVIBI()
 
-# calculate module-level VIBI for all sites sampled in 2023
-vibi23 <- joinVIBI_module(years = 2023)
+# average modules to plot-level VIBI for all sites sampled in 2023
+vibi23 <- sumVIBI(years = 2023)
 
-# calculate module-level VIBI for all emergent wetlands
-vibi_emerg <- joinVIBI_module(dom_veg1 = "emergent")
+# average modules to plot-level VIBI for all emergent wetlands
+vibi_emerg <- sumVIBI(dom_veg1 = "emergent")
 
-# calculate module-level VIBI for depressional wetlands
+# average modules to plot-level VIBI for depressional wetlands
 
-vibi_dep <- joinVIBI_module(hgm_class = "Depression")
+vibi_dep <- sumVIBI(hgm_class = "Depression")
 
 
 }
