@@ -102,7 +102,7 @@ importData(type ='dbfile',
 Additional import options will be added as the data package is completed for VIBI, and as ORAM and hydrology import features are added, including the ability to export views as csvs and/or a zipped file containing csvs.
 
 <h4><b>Step 6.</b> Play with the data </h4>
-The functions in the `wetlandHTLN` package are designed to work with the views, and are the best way to interact with the data to query by park, site, site type, year, parameter, etc. However, if you want to view the raw data, and you imported the data into the ROCKY environment, you can access them with the code below:
+The functions in the `wetlandHTLN` package are designed to work with the views, and are the best way to interact with the data to query by park, site, site type, year, parameter, etc. However, if you want to view the raw data, and you imported the data into the HTLNwetlands environment, you can access them with the code below:
 ```{r eval = F}
 # See list of the views
 names(HTLNwetlands)
