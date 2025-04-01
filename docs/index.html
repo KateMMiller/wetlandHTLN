@@ -637,9 +637,14 @@ store the database (and eventually the data package files) on your local
 machine, OneDrive, or HTLN server. The <code>importData()</code>
 function defaults are to import required data tables from the
 HTLNwetlands Access database and then compile the data package views
-(i.e. flatfiles) for use with the R package. Once the data package is
-published, I’ll add importing data package views as an option in this
-function.</p>
+(i.e. flatfiles) for use with the R package. Using the default settings
+requires the <code>DBI</code> and <code>odbc</code> packages to be
+installed, and users must have MS Access installed on their computer. If
+those packages aren’t installed, you’ll get an error message in the
+console asking you to install them. Once the data package is published,
+I’ll add importing data package views as an option in this function,
+which then will not require MS Access or the <code>DBI</code> and
+<code>odbc</code> packages.</p>
 <p>To keep your workspace clean (i.e. the top right panel with the
 Environment tab) in R, the default setting for <code>importData()</code>
 is to import data files into an environment called HTLNwetlands. If you
@@ -657,7 +662,9 @@ and hydrology will be added.</p>
 settings, which imports from DSN named
 <strong>HTLNwetlands</strong>.</span>
 </p>
-<pre class="r"><code>importData() 
+<pre class="r"><code>#install.packages(c(&#39;odbc&#39;, &#39;DBI&#39;)) # Only run if not already installed.
+
+importData() 
 importData(type = &quot;DSN&quot;, odbc = &quot;HTLNwetlands&quot;, data_type = &quot;vibi&quot;) # equivalent to previous line</code></pre>
 <p class="indent">
 <span style="color:#1942B5;"><b>Option 2.</b> Import data from a
