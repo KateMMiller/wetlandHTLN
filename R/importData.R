@@ -96,7 +96,8 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   if(data_type %in% c("vibi", "all")){
   tbls <- c("tbl_BigTrees",
             "tbl_Locations",
-            #"tbl_SamplingEvents",
+            "tbl_SamplingEvents",
+            "tbl_SamplingPeriods",
             "tbl_SiteWPs",
             "tbl_VIBI_Herb",
             "tbl_VIBI_Herb_Biomass",
@@ -181,7 +182,14 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   veg_tbl <- data.frame(X1oPlants = c("PEM", "PFO", "PSS"), DomVeg_Lev1 = c("emergent", "forest", "shrub"))
   loc <- left_join(loc4, veg_tbl, by = c("X1oPlants"))
 
-  #sitewp <- get("SiteWPs", envir = env) # can't find a reason to join this table to loc
+  samp_pds <- get("SamplingPeriods", envir = env)
+  samp_evs <- get("SamplingEvents", envir = env)
+
+  samp_comb <- full_join(samp_pds, samp_evs, by = c("PeriodID"), suffix = c("_pd", "_ev"))
+  samp_comb$PeriodDate = as.Date(sub("CUVAWetlnd", "", samp_comb$PeriodID), format = "%Y%b%d")
+  samp_comb$PeriodYear = as.numeric(format(samp_comb$PeriodDate, format = "%Y"))
+  samp_comb$SampleDate = as.Date(sub("CUVAWetlnd", "", samp_comb$EventID), format = "%Y%b%d")
+  samp_comb$SampleYear = as.numeric(format(samp_comb$SampleDate, format = "%Y"))
 
   bmass <- get("VIBI_Herb_Biomass", envir = env)
   bmass$SampleDate = as.Date(sub("CUVAWetlnd", "", bmass$EventID), format = "%Y%b%d")
@@ -205,7 +213,8 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   names(btrees)[names(btrees) == "ModNo"] <- "ModuleNo"
 
   # Column names to order by/include for each view
-  loc_cols <- c("LocationID", "FeatureID", "Park", "County", "SampleDate", "SampleYear", #"Latitude", "Longitude",
+  loc_cols <- c("LocationID", "FeatureID", "Park", "County", "PeriodDate", "PeriodYear",
+                "SampleDate", "SampleYear", #"Latitude", "Longitude",
                 "TotalMods", "InternMods", "PlotConfig",
                 "AreaHA", "X1oPlants", "X1oHGM", "X2oVegID", "DomVegID", "HGM_ID", "HGMClass",
                 "Mod_Desc", "DomVeg_Lev1", "DomVeg_Lev2", "DomVeg_Lev3", "SurveyType")
@@ -219,7 +228,9 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
     dplyr::filter(FeatureTypes %in% c("VIBIplotID")) |>
     dplyr::filter(!is.na(EventID))
 
-  bmass_final <- bmass1[,c(loc_cols, "VIBI_Herb_Biomass_ID", "ModuleNo", "Corner", "DryWt", "EventID")]
+  bmass2 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], bmass1, by = c("EventID"))
+
+  bmass_final <- bmass2[,c(loc_cols, "VIBI_Herb_Biomass_ID", "ModuleNo", "Corner", "DryWt", "EventID", "PeriodID")]
 
   # Herbs
   herb3 <- dplyr::left_join(loc, herb2, by = "LocationID", suffix = c("_Loc", "_Herb")) |>
@@ -230,7 +241,9 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   names(herb4)[names(herb4) == "Species"] <- "ScientificName"
   herb4$COFC <- as.numeric(herb4$COFC)
 
-  herb_final <- herb4[,c(loc_cols, spp_cols, "ModuleNo", "CovCode", "MidPoint", "VoucherNo", "Comments_Herb", "EventID")]
+  herb5 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], herb4, by = c("EventID"))
+
+  herb_final <- herb5[,c(loc_cols, spp_cols, "ModuleNo", "CovCode", "MidPoint", "VoucherNo", "Comments_Herb", "EventID", "PeriodID")]
 
   # Woody
   woody1 <- dplyr::left_join(loc, woody, by = c("LocationID"), suffix = c("_Loc", "_Woody")) |>
@@ -243,7 +256,9 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   names(woody3)[names(woody3) == "Scientific_Name"] <- "ScientificName"
   names(woody3)[names(woody3) == "FeatureID_Loc"] <- "FeatureID"
 
-  woody_final <- woody3[,c(loc_cols, spp_cols, "ModuleNo", "DiamID", "SortOrder", "DiamVal", "DBH_MidPt", "Count", "EventID")]
+  woody4 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], woody3, by = c("EventID"))
+
+  woody_final <- woody4[,c(loc_cols, spp_cols, "ModuleNo", "DiamID", "SortOrder", "DiamVal", "DBH_MidPt", "Count", "EventID", "PeriodID")]
 
   # BigTrees
   btrees1 <- dplyr::left_join(loc, btrees, by = c("LocationID"), suffix = c("_Loc", "_BT")) |>
@@ -252,7 +267,9 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   btrees2 <- dplyr::left_join(btrees1, tluSpp, by = "ScientificName") |>
     filter(!is.na(EventID)) # dropping records with no bigtree data
 
-  btrees_final <- btrees2[,c(loc_cols, spp_cols, "ModuleNo", "DBH", "EventID")]
+  btrees3 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], btrees2, by = c("EventID"))
+
+  btrees_final <- btrees3[,c(loc_cols, spp_cols, "ModuleNo", "DBH", "EventID", "PeriodID")]
 
   # remove all but final tables from HTLNwetlands env.
   names(HTLNwetlands)
@@ -264,5 +281,10 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   assign("woodyVIBI", woody_final, envir = env)
   assign("bigtreesVIBI", btrees_final, envir = env)
   assign("tluSpp", tluSpp, envir = env)
+
+  # Print message in console
+  print(ifelse(new_env == TRUE,
+               paste0("Import complete. Views are located in HTLNwetlands environment."),
+               paste0("Import complete. Views are located in global environment.")), quote = FALSE)
   }
   }
