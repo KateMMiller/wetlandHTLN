@@ -90,6 +90,10 @@ check_null_print(tbl_miss_periods, 4, "miss PeriodID")
 
 check_null_print(tbl_miss_samp_evs, 4, "miss EventID")
 
+check_null_print(tbl_no_evs, 4, "No EventIDs")
+
+check_null_print(tbl_miss_spd, 4, "Miss StartDate")
+
 check_null_print(tbl_odd_dates1, 4, "StartDate1")
 
 check_null_print(tbl_odd_dates2, 4, "StartDate2")
