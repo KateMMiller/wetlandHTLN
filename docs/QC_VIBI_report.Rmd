@@ -9,7 +9,7 @@ output:
 params:
   year_curr: 2023 # Current year of sampling
   all_years: TRUE # If FALSE, only reports on year_curr; TRUE reports on all years
-  spp_list: "FQAI" # If FQAI, matches species in database against OH EPA spp. list. If "DB", matches against tlu_WetlndSpeciesList. Once tlu_WetlndSpeciesList is cleaned up, switch this to "DB". 
+  spp_list: "DB" # If FQAI, matches species in database against OH EPA spp. list. If "DB", matches against tlu_WetlndSpeciesList. Once tlu_WetlndSpeciesList is cleaned up, switch this to "DB". 
   
 ---
 
@@ -90,7 +90,7 @@ check_null_print(tbl_miss_periods, 4, "miss PeriodID")
 
 check_null_print(tbl_miss_samp_evs, 4, "miss EventID")
 
-check_null_print(tbl_no_evs, 4, "No EventIDs")
+#check_null_print(tbl_no_evs, 4, "No EventIDs") # turned off. Remaining are ORAM visits
 
 check_null_print(tbl_miss_spd, 4, "Miss StartDate")
 
@@ -189,7 +189,7 @@ cat("\n\n")
 ```{r eval = spp_include, results = 'asis'}
 cat("### Species List {.tabset}", "\n\n")
 
-check_null_print(tbl_adv_check, 4, "Adventive check")
+#check_null_print(tbl_adv_check, 4, "Adventive check") # doesn't seem like a useful check
 
 check_null_print(tbl_miss_spp, 4, "Unmatched data in tluWSL")
 

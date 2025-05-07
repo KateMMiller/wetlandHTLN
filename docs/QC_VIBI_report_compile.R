@@ -239,14 +239,14 @@ tbl_sample_evs <- kable(sample_evs3, format = 'html', align = 'c',
   column_spec(3, width = "150px")
 
 # Find PeriodIDs without EventIDs
-no_evs <- samp_comb |> filter(is.na(EventID))
-
-QC_table <- rbind(QC_table,
-                  QC_check(no_evs, "Periods/Events",
-                           "PeriodIDs in tbl_SamplingEvents that have no EventIDs associated with Herb, Biomass, Woody or BigTrees tables.", "error"))
-
-
-tbl_no_evs <- make_kable(no_evs, "PeriodIDs in tbl_SamplingEvents that have no EventIDs associated with Herb, Biomass, Woody or BigTrees tables.")
+# no_evs <- samp_comb |> filter(is.na(EventID))
+#
+# QC_table <- rbind(QC_table,
+#                   QC_check(no_evs, "Periods/Events",
+#                            "PeriodIDs in tbl_SamplingEvents that have no EventIDs associated with Herb, Biomass, Woody or BigTrees tables.", "error"))
+#
+#
+# tbl_no_evs <- make_kable(no_evs, "PeriodIDs in tbl_SamplingEvents that have no EventIDs associated with Herb, Biomass, Woody or BigTrees tables.")
 
 # Check SamplingPeriods table for StartDate format- catch any that don't follow %m/%d/%Y
 tbl_SamplingPeriods$StartDate_check <- format(as.Date(tbl_SamplingPeriods$StartDate, format = "%Y-%m-%d"), format = "%Y-%m-%d")
@@ -618,14 +618,14 @@ bigt_include <- tab_include(bigt_check)
 
 #----- Species list -----
 # check that OH_STATUS == "adventive" and SHADE = "advent" match
-adv_check <- tlu_WetlndSpeciesList |> filter(OH_STATUS == "adventive" & !SHADE == "advent")
-
-QC_table <- rbind(QC_table,
-                  QC_check(adv_check, "tlu_Wetlnd_SpeciesList",
-                           "Species with OH_STATUS = 'adventive', but SHADE != 'advent'. Not sure if this is a worthwhile check or not.", "check"))
-
-tbl_adv_check <- make_kable(adv_check, "Species with OH_STATUS = 'adventive', but SHADE != 'advent'. Not sure if this is a worthwhile check or not.")
-
+# adv_check <- tlu_WetlndSpeciesList |> filter(OH_STATUS == "adventive" & !SHADE == "advent")
+#
+# QC_table <- rbind(QC_table,
+#                   QC_check(adv_check, "tlu_Wetlnd_SpeciesList",
+#                            "Species with OH_STATUS = 'adventive', but SHADE != 'advent'. Not sure if this is a worthwhile check or not.", "check"))
+#
+# tbl_adv_check <- make_kable(adv_check, "Species with OH_STATUS = 'adventive', but SHADE != 'advent'. Not sure if this is a worthwhile check or not.")
+#
 # Find species recorded in Herb and Woody tables that aren't on FQAI list- will continue to use this
 # to find species added during sampling.
 herb_spp <- tbl_VIBI_Herb |> select(LocationID, EventID, ModuleNo = ModNo, ScientificName = Species) |>
