@@ -221,7 +221,7 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
 
   spp_cols <- c("ScientificName", "COMMON_NAME", "AUTHORITY", "FAMILY", "ACRONYM", "COFC",
                 "FN", "WET", "FORM", "HABIT", "SHADE", "USDA_ID",
-                "OH_TORE", "TYPE", "OH_STATUS", "GROUP", "EMP", "MW", "NCNE", "NOTES")
+                "OH_TORE", "TYPE", "OH_STATUS", "EMP", "MW", "NCNE", "NOTES")
 
   # Biomass
   bmass1 <- dplyr::left_join(loc, bmass, by = "LocationID", suffix = c("_Loc", "_bmass")) |>
