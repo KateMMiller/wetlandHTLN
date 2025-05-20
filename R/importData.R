@@ -3,14 +3,14 @@
 #' @importFrom dplyr filter left_join select
 #'
 #' @description This function imports tables from the Heartland Network database and compiles flat files
-#' to be incorporated into the data package. You can either set a data source name (DSN) called "HTLNwetlands"
+#' to be incorporated into the data package. You can either set a data source name (DSN) called "HTLN_wetlands"
 #' to import the data, or can specify a file name. Eventually this will be enabled to import the data package
 #' csvs from IRMA.
 #'
 #' @param type Select how to import the database tables.
 #' \describe{
-#' \item{"DSN"}{Default. DSN database. If odbc is not specified, will default to HTLNwetlands.
-#' Using this argument requires that you have a User DSN named HTLNwetlands that points to the
+#' \item{"DSN"}{Default. DSN database. If odbc is not specified, will default to HTLN_wetlands.
+#' Using this argument requires that you have a User DSN named HTLN_wetlands that points to the
 #' database containing the latest data.}
 #' \item{"dbfile"}{A specified database containing the database tables. If selected,
 #' must provide the database filepath in the filepath argument.}
@@ -22,14 +22,14 @@
 #' ODBC driver on your computer.}
 #' }
 #'
-#' @param odbc DSN of the database when using type = DSN. If not specified will default to "HTLNwetlands",
+#' @param odbc DSN of the database when using type = DSN. If not specified will default to "HTLN_wetlands",
 #' which should represent the HTLN wetland database with the latest data.
 #'
 #' @param filepath Quoted filepath where data package database (if type = "dbfile") or the csvs
 #' (if type = "csv" or type = "zip") live.
 #'
 #' @param new_env Logical. Specifies which environment to store views in. If \code{TRUE}(Default), stores
-#' views in HTLNwetlands environment. If \code{FALSE}, stores views in global environment
+#' views in HTLN_wetlands environment. If \code{FALSE}, stores views in global environment
 #'
 #' @param data_type Select type of data to import
 #' \describe{
@@ -38,15 +38,19 @@
 #' \item{"all"}{*NOT CURRENTLY ENABLED* Import all tables relevant for data package.}
 #' }
 #'
+#' @param export Logical. If TRUE, will export a zip file of csvs to specified export_path.
+#'
+#' @param export_path Quoted string to export zipped csvs to if export = TRUE. If not specified, will export to the working directory.
+#'
 #' @examples
 #' \dontrun{
 #'
-#' # Import views using DSN
-#' importData(type ='DSN', odbc = "HTLNwetlands") # this is the same as importData()
+#' # Import views using DSN and export zip of views to working directory
+#' importData(type ='DSN', odbc = "HTLN_wetlands", export = T) # this is the same as importData()
 #'
 #' # Import views from specified database:
 #' importData(type ='dbfile',
-#'   filepath = 'C:/Users/KMMiller/OneDrive - DOI/MWR/HTLN_wetlands/VIBI/HTLNWetlands3.4.1.accdb')
+#'   filepath = 'C:/Users/KMMiller/OneDrive - DOI/MWR/HTLN_wetlands/HTLNwetlands3.4.6.accdb')
 #'
 #' }
 #'
@@ -55,18 +59,30 @@
 #' @export
 #'
 
-importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_env = TRUE, data_type = "vibi"){
+importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_env = TRUE, data_type = "vibi",
+                       export = FALSE, export_path = NA){
 
   #---- Bug handling ----
   # matche arguments
   type <- match.arg(type, c("DSN", "dbfile", "csv", "zip"))
   stopifnot(class(new_env) == 'logical')
   data_type <- match.arg(data_type, c("vibi")) #+++ Add oram and all when they're enabled ++++
+  stopifnot(is.logical(export_path))
 
   # check that filepath was specified for non-DSN options
   if(type %in% c("dbfile", "csv", "zip")){
     if(is.na(filepath)){stop(paste0("Must specify a filepath to the database when type = '",
                                     type, "' option."))}
+  }
+
+  if(export == TRUE){
+    if(is.na(export_path)){
+      export_path <- getwd()
+      print(paste0("No export_path specified. Output saved to working directory: ", getwd()), quote = FALSE)}
+    if(!grepl("/$", export_path)){export_path <- paste0(export_path, "/")} # add / to end of path if doesn't exist
+    if(!dir.exists(export_path)){stop("Specified export_path directory does not exist.")}
+    # Normalize filepath for zip
+    export_pathn <- normalizePath(export_path)
   }
 
   if(type == 'csv'){
@@ -89,9 +105,9 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
   }
 
   # Create new environment if new_env = T or set env as Global
-  if(new_env == TRUE){HTLNwetlands <<- new.env()}
+  if(new_env == TRUE){HTLN_wetlands <<- new.env()}
 
-  env <- if(new_env == TRUE){HTLNwetlands} else {.GlobalEnv}
+  env <- if(new_env == TRUE){HTLN_wetlands} else {.GlobalEnv}
 
   if(data_type %in% c("vibi", "all")){
   tbls <- c("tbl_BigTrees",
@@ -271,8 +287,8 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
 
   btrees_final <- btrees3[,c(loc_cols, spp_cols, "ModuleNo", "DBH", "EventID", "PeriodID")]
 
-  # remove all but final tables from HTLNwetlands env.
-  names(HTLNwetlands)
+  # remove all but final tables from HTLN_wetlands env.
+
   rm(list = ls(envir = env), envir = env)
 
   assign("locations", loc, envir = env)
@@ -284,7 +300,29 @@ importData <- function(type = 'DSN', odbc = "HTLNwetlands", filepath = NA, new_e
 
   # Print message in console
   print(ifelse(new_env == TRUE,
-               paste0("Import complete. Views are located in HTLNwetlands environment."),
+               paste0("Import complete. Views are located in HTLN_wetlands environment."),
                paste0("Import complete. Views are located in global environment.")), quote = FALSE)
+  }
+
+  if(export == TRUE){
+    dir.create(tmp <- tempfile())
+    dbtbls <- names(HTLN_wetlands)
+
+    invisible(lapply(seq_along(dbtbls), function(x){
+      temp_tbl = get(dbtbls[x], envir = env)
+      write.csv(temp_tbl,
+                paste0(tmp, "\\", dbtbls[x], ".csv"),
+                row.names = FALSE)
+    }))
+
+    file_list <- list.files(tmp)
+    zip_name = paste0("HTLN_Wetland_VIBI_views_", format(Sys.Date(), "%Y%m%d"), ".zip")
+
+    zip::zipr(zipfile = paste0(export_pathn, "\\", zip_name),
+              root = tmp,
+              files = file_list)
+    # csvs will be deleted as soon as R session is closed b/c tempfile
+    noquote(paste0('Export complete. Wetland VIBI views saved to: ', export_pathn, zip_name))
+
   }
   }
