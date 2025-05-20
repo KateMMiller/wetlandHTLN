@@ -58,7 +58,7 @@ check_null_print <- function(table, tab_level = 4, tab_title){
 #---- Compile Data ----
 # import database tables to check raw data (ie, not views)
 tryCatch(
-  db <- DBI::dbConnect(drv = odbc::odbc(), dsn = "HTLNWetlands"),
+  db <- DBI::dbConnect(drv = odbc::odbc(), dsn = "HTLN_wetlands"),
   error = function(e){stop(paste0("Unable to connect to DSN to check tbl_SamplingEvents vs tbl_SamplingPeriods."))})
 tbls <- c("tbl_SamplingEvents", "tbl_SamplingPeriods", "tbl_VIBI_Herb",
           "tbl_VIBI_Herb_Biomass", "tbl_VIBI_Woody", "tbl_BigTrees",
@@ -79,7 +79,7 @@ head(tluspp) # SCIENTIFIC_NAME for FQAI
 
 #---- Individual View checking ----
 #----- Locations -----
-loc <- get("locations", env = HTLNwetlands)
+loc <- get("locations", env = HTLN_wetlands)
 locv <- loc |> filter(FeatureTypes %in% c("VIBIPlotID", "VIBIplotID"))
 
 # Check for LocationIDs that don't match convention of PARKWetlnd

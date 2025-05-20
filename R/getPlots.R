@@ -65,7 +65,7 @@ getPlots <- function(plot_type = "VIBIplotID", survey_type = 'all', hgm_class = 
   stopifnot(class(intens_mods) == "numeric" | class(intens_mods) == "integer")
 
   #---- Compile data ----
-  env <- if(exists("HTLNwetlands")){HTLNwetlands} else {.GlobalEnv}
+  env <- if(exists("HTLN_wetlands")){HTLN_wetlands} else {.GlobalEnv}
 
   tryCatch(plot <- get("locations", envir = env),
            error = function(e){stop("tbl_Locations not found. Please run importData() first.")})

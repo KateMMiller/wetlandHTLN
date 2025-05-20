@@ -74,7 +74,7 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   stopifnot(class(intens_mods) == "numeric" | class(intens_mods) == "integer")
 
   #---- Summarize vibi at plot level ----
-  env <- if(exists("HTLNwetlands")){HTLNwetlands} else {.GlobalEnv}
+  env <- if(exists("HTLN_wetlands")){HTLN_wetlands} else {.GlobalEnv}
 
   vibi <- suppressWarnings(
     joinVIBI_module(years = years, survey_type = survey_type, hgm_class = hgm_class, dom_veg1 = dom_veg1,

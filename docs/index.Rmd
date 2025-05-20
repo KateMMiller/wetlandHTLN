@@ -79,47 +79,47 @@ install_github("KateMMiller/wetlandHTLN")
 library(wetlandHTLN)
 ```
 <h4><b>Step 5.</b> Import wetland monitoring data</h4>
-Note that R is not able to connect to files on Sharepoint or MS Teams (b/c Teams also stores all files on Sharepoint). That means you need to store the database (and eventually the data package files) on your local machine, OneDrive, or HTLN server. The `importData()` function defaults are to import required data tables from the HTLNwetlands Access database and then compile the data package views (i.e. flatfiles) for use with the R package. Using the default settings requires the `DBI` and `odbc` packages to be installed, and users must have MS Access installed on their computer. If those packages aren't installed, you'll get an error message in the console asking you to install them. Once the data package is published, I'll add importing data package views as an option in this function, which then will not require MS Access or the `DBI` and `odbc` packages.
+Note that R is not able to connect to files on Sharepoint or MS Teams (b/c Teams also stores all files on Sharepoint). That means you need to store the database (and eventually the data package files) on your local machine, OneDrive, or HTLN server. The `importData()` function defaults are to import required data tables from the HTLN_wetlands Access database and then compile the data package views (i.e. flatfiles) for use with the R package. Using the default settings requires the `DBI` and `odbc` packages to be installed, and users must have MS Access installed on their computer. If those packages aren't installed, you'll get an error message in the console asking you to install them. Once the data package is published, I'll add importing data package views as an option in this function, which then will not require MS Access or the `DBI` and `odbc` packages.
 
-To keep your workspace clean (i.e. the top right panel with the Environment tab) in R, the default setting for `importData()` is to import data files into an environment called HTLNwetlands. If you would rather import each individual view into your R session, specify with the new_env argument (e.g., `importData(new_env = F)`). To import data using the default settings (i.e. run `importData()` with no arguments), you must have the HTLNwetlands access database set as a User DSN called HTLNwetlands (see "Setting up DSN" tab for more details).  
+To keep your workspace clean (i.e. the top right panel with the Environment tab) in R, the default setting for `importData()` is to import data files into an environment called HTLN_wetlands. If you would rather import each individual view into your R session, specify with the new_env argument (e.g., `importData(new_env = F)`). To import data using the default settings (i.e. run `importData()` with no arguments), you must have the HTLN_wetlands access database set as a User DSN called HTLN_wetlands (see "Setting up DSN" tab for more details).  
 
 Currently, the `importData()` function only imports views related to the VIBI. Over time, options to compile/import views for ORAM and hydrology will be added.  
 
 <p class = 'indent'>
-<span style='color:#1942B5;'><b>Option 1.</b> Import data using default settings, which imports from DSN named **HTLNwetlands**.</span></p>
+<span style='color:#1942B5;'><b>Option 1.</b> Import data using default settings, which imports from DSN named **HTLN_wetlands**.</span></p>
 ```{r results = 'hide'}
 #install.packages(c('odbc', 'DBI')) # Only run if not already installed.
 
 importData() 
-importData(type = "DSN", odbc = "HTLNwetlands", data_type = "vibi") # equivalent to previous line
+importData(type = "DSN", odbc = "HTLN_wetlands", data_type = "vibi") # equivalent to previous line
 ```
 
 <p class = 'indent'>
 <span style='color:#1942B5;'><b>Option 2.</b> Import data from a specified database.</span></p>
 ```{r, results = 'hide'}
 importData(type ='dbfile',
-   filepath = 'C:/Users/KMMiller/OneDrive - DOI/MWR/HTLN_wetlands/VIBI/HTLNWetlands3.4.1.accdb')
+   filepath = 'C:/Users/KMMiller/OneDrive - DOI/MWR/HTLN_wetlands/HTLNwetlands3.4.6.accdb')
 ```
 
 Additional import options will be added as the data package is completed for VIBI, and as ORAM and hydrology import features are added, including the ability to export views as csvs and/or a zipped file containing csvs.
 
 <h4><b>Step 6.</b> Play with the data </h4>
-The functions in the `wetlandHTLN` package are designed to work with the views, and are the best way to interact with the data to query by park, site, site type, year, parameter, etc. However, if you want to view the raw data, and you imported the data into the HTLNwetlands environment, you can access them with the code below:
+The functions in the `wetlandHTLN` package are designed to work with the views, and are the best way to interact with the data to query by park, site, site type, year, parameter, etc. However, if you want to view the raw data, and you imported the data into the HTLN_wetlands environment, you can access them with the code below:
 ```{r eval = F}
 # See list of the views
-names(HTLNwetlands)
+names(HTLN_wetlands)
 
 # Look at one of the views
-View(HTLNwetlands$herbVIBI)
+View(HTLN_wetlands$herbVIBI)
 
 # See top 6 records 
-head(HTLNwetlands$herbVIBI)
+head(HTLN_wetlands$herbVIBI)
 
 # Check structure of view
-str(HTLNwetlands$woodyVIBI)
+str(HTLN_wetlands$woodyVIBI)
 
 # Assign a view to a data frame named herbs in R. Interact with herbs the way you would work with any normal data frame in R. 
-herbs <- HTLNwetlands$herbVIBI
+herbs <- HTLN_wetlands$herbVIBI
 
 ```
 While this works, the better approach is to use the "getter" functions within the R package, which access the same files, but allow you to also query data based on park, location, years, plot name, species, etc. See the specific getter function tabs for details. 
@@ -183,7 +183,7 @@ knitr::include_graphics(paste0(imgpath, "/docs/www/ODBC_step_1.jpg"))
 knitr::include_graphics(paste0(imgpath, "./docs/www/ODBC_step_2.jpg"))
 ```
 
-<li>Enter <b>HTLNwetlands</b> into the Data Source Name (red arrow), click on Select (red circle). In the new window, click on C:/ and find the path to your database. To navigate to a OneDrive folder, go to C:/Users/<UserName>/OneDrive - DOI/ and then find the correct folder. If it's not on your C: Drive, then click on the Drives window in bottom right and select correct drive. Click on the database (yellow arrow), then click OK. Finally, add the name of the database file to the Description (blue arrow), so it's easier to check whether you're using the latest version.  </li>
+<li>Enter <b>HTLN_wetlands</b> into the Data Source Name (red arrow), click on Select (red circle). In the new window, click on C:/ and find the path to your database. To navigate to a OneDrive folder, go to C:/Users/<UserName>/OneDrive - DOI/ and then find the correct folder. If it's not on your C: Drive, then click on the Drives window in bottom right and select correct drive. Click on the database (yellow arrow), then click OK. Finally, add the name of the database file to the Description (blue arrow), so it's easier to check whether you're using the latest version.  </li>
 ```{r echo = F, out.height = '486px', out.width = '600px', fig.align = 'center'}
 knitr::include_graphics(paste0(imgpath, "./docs/www/ODBC_step_3.jpg"))
 ```
@@ -502,7 +502,7 @@ print_head(vibi_ref)
 
 
 #### joinVIBI_plot()
-This function summarizes plot-level VIBI and filters by plot, year, and plot types. This function most closely matches the OH EPA VIBI spreadsheet calculations. Slight differences in VIBI calculations are due to differences between the species list in the tlu_WetlndSpeciesList lookup table in the HTLNwetlands database, and the species list in the FQAI list in the spreadsheet (particularly species added to or tweaked on the spreadsheet FQAI list). 
+This function summarizes plot-level VIBI and filters by plot, year, and plot types. This function most closely matches the OH EPA VIBI spreadsheet calculations. Slight differences in VIBI calculations are due to differences between the species list in the tlu_WetlndSpeciesList lookup table in the HTLN_wetlands database, and the species list in the FQAI list in the spreadsheet (particularly species added to or tweaked on the spreadsheet FQAI list). 
 
 **THIS FUNCTION ONLY WORKS ON PLOTS THAT HAVE 4 INTENSIVE MODULES SAMPLED.** This function is intended to provide results that are comparable with other datasets that use the VIBI and are based on 4 intensive modules. For module-level VIBI scores, including for comparisons among sites with fewer than 4 intensive modules, use `joinVIBI_module()`.
 

@@ -70,7 +70,7 @@ getBiomass <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")
   stopifnot(class(intens_mods) == "numeric" | class(intens_mods) == "integer")
 
   #---- Compile data ----
-  env <- if(exists("HTLNwetlands")){HTLNwetlands} else {.GlobalEnv}
+  env <- if(exists("HTLN_wetlands")){HTLN_wetlands} else {.GlobalEnv}
 
   tryCatch(biomass <- get("biomassVIBI", envir = env),
            error = function(e){stop("tbl_VIBI_Herb_Biomass not found. Please run importData() first.")})

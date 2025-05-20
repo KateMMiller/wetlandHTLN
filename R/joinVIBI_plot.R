@@ -80,7 +80,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   stopifnot(class(years) == "numeric" | class(years) == "integer", years >= 2008)
 
   #---- Compile Plot and visit-level data ----
-  env <- if(exists("HTLNwetlands")){HTLNwetlands} else {.GlobalEnv}
+  env <- if(exists("HTLN_wetlands")){HTLN_wetlands} else {.GlobalEnv}
 
   plots <- getPlots(plot_type = "VIBIplotID", survey_type = survey_type, hgm_class = hgm_class,
                     dom_veg1 = dom_veg1, plotID = plotID, intens_mods = 4)
