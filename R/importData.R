@@ -62,6 +62,14 @@
 importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_env = TRUE, data_type = "vibi",
                        export = FALSE, export_path = NA){
 
+  # Appends DWC columns `type` and `basisOfRecord` to a dataset
+  mini_darwin_core <- function(df) {
+    df$type <- "Event"
+    df$basisOfRecord <- "HumanObservation"
+
+    df
+  }
+
   #---- Bug handling ----
   # matche arguments
   type <- match.arg(type, c("DSN", "dbfile", "csv", "zip"))
@@ -246,7 +254,8 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
 
   bmass2 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], bmass1, by = c("EventID"))
 
-  bmass_final <- bmass2[,c(loc_cols, "VIBI_Herb_Biomass_ID", "ModuleNo", "Corner", "DryWt", "EventID", "PeriodID")]
+  bmass_final <- bmass2[,c(loc_cols, "VIBI_Herb_Biomass_ID", "ModuleNo", "Corner", "DryWt", "EventID", "PeriodID")] |>
+    mini_darwin_core()
 
   # Herbs
   herb3 <- dplyr::left_join(loc, herb2, by = "LocationID", suffix = c("_Loc", "_Herb")) |>
@@ -259,7 +268,8 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
 
   herb5 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], herb4, by = c("EventID"))
 
-  herb_final <- herb5[,c(loc_cols, spp_cols, "ModuleNo", "CovCode", "MidPoint", "VoucherNo", "Comments_Herb", "EventID", "PeriodID")]
+  herb_final <- herb5[,c(loc_cols, spp_cols, "ModuleNo", "CovCode", "MidPoint", "VoucherNo", "Comments_Herb", "EventID", "PeriodID")] |>
+    mini_darwin_core()
 
   # Woody
   woody1 <- dplyr::left_join(loc, woody, by = c("LocationID"), suffix = c("_Loc", "_Woody")) |>
@@ -274,7 +284,8 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
 
   woody4 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], woody3, by = c("EventID"))
 
-  woody_final <- woody4[,c(loc_cols, spp_cols, "ModuleNo", "DiamID", "SortOrder", "DiamVal", "DBH_MidPt", "Count", "EventID", "PeriodID")]
+  woody_final <- woody4[,c(loc_cols, spp_cols, "ModuleNo", "DiamID", "SortOrder", "DiamVal", "DBH_MidPt", "Count", "EventID", "PeriodID")] |>
+    mini_darwin_core()
 
   # BigTrees
   btrees1 <- dplyr::left_join(loc, btrees, by = c("LocationID"), suffix = c("_Loc", "_BT")) |>
@@ -285,7 +296,8 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
 
   btrees3 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], btrees2, by = c("EventID"))
 
-  btrees_final <- btrees3[,c(loc_cols, spp_cols, "ModuleNo", "DBH", "EventID", "PeriodID")]
+  btrees_final <- btrees3[,c(loc_cols, spp_cols, "ModuleNo", "DBH", "EventID", "PeriodID")] |>
+    mini_darwin_core()
 
   # remove all but final tables from HTLN_wetlands env.
 
