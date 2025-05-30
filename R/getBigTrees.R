@@ -30,7 +30,7 @@
 #' importData()
 #'
 #' # return all big tree data
-#' bigtree <- getBigTree()
+#' bigtree <- getBigTrees()
 #'
 #' # return only 2023 data
 #' bigtree23 <- getBigTrees(years = 2023)
