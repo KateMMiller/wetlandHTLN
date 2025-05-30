@@ -62,12 +62,12 @@ csvs from IRMA.
 \examples{
 \dontrun{
 
-# Import views using DSN and export zip of views
+# Import views using DSN and export zip of views to working directory
 importData(type ='DSN', odbc = "HTLN_wetlands", export = T) # this is the same as importData()
 
 # Import views from specified database:
 importData(type ='dbfile',
-  filepath = 'C:/Users/KMMiller/OneDrive - DOI/MWR/HTLN_wetlands/VIBI/HTLN_wetlands3.4.1.accdb')
+  filepath = 'C:/Users/KMMiller/OneDrive - DOI/MWR/HTLN_wetlands/HTLNwetlands3.4.6.accdb')
 
 }
 
