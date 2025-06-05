@@ -90,12 +90,10 @@ tbl_VIBI_Herb_Biomass <- tbl_VIBI_Herb_Biomass |> filter(year %in% year_range)
 tbl_VIBI_Woody <- tbl_VIBI_Woody |> filter(year %in% year_range)
 tbl_BigTrees <- tbl_BigTrees |> filter(year %in% year_range)
 
-#head(tluspp) # SCIENTIFIC_NAME for FQAI
-
 #---- Individual View checking ----
 #----- Locations -----
 loc <- get("locations", env = HTLN_wetlands)
-locv <- loc |> filter(FeatureTypes %in% c("VIBIPlotID", "VIBIplotID")) #++++ ENDED HERE +++++ drop locations that weren't sampled in year range- get that from events
+locv <- loc |> filter(FeatureTypes %in% c("VIBIPlotID", "VIBIplotID"))
 
 # Check for LocationIDs that don't match convention of PARKWetlnd
 locid_typos <- loc |> filter(!substr(LocationID, 1, 10) %in% c("CUVAWetlnd", "TAPRWetlnd")) |> select(LocationID, FeatureTypes, FeatureID)
@@ -237,7 +235,7 @@ sample_evs2 <- left_join(locv |> select(LocationID, FeatureID, X1oPlants), sampl
          Biomass = tbl_VIBI_Herb_Biomass, Woody = tbl_VIBI_Woody, BigTrees = tbl_BigTrees, Num_Samp_Mods) |>
   arrange(FeatureID, PeriodYear)
 
-sample_evs3 <- sample_evs2 |> select(-PeriodDate)
+sample_evs3 <- sample_evs2 |> select(-PeriodDate) |> filter(!is.na(PeriodYear))
 
 tbl_sample_evs <- kable(sample_evs3, format = 'html', align = 'c',
                         caption = paste0("HTLN wetland sampling matrix. Highlighted rows have fewer than 3 samples",
@@ -423,8 +421,6 @@ tbl_wt_99 <- make_kable(wt_99, "Dry Weights that are >99% of all weights that ha
 # check if Biomass checks returned at least 1 record to determine whether to include that tab in report
 biomass_check <- QC_table |> filter(Data %in% "VIBI Biomass" & Num_Records > 0)
 biomass_include <- tab_include(biomass_check)
-
-
 
 #----- Woody -----
 # Find FeatureIDs in Woody table that don't match Locations via LocationID
