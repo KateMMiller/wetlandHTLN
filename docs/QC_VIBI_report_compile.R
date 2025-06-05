@@ -13,8 +13,9 @@
 # importData()
 #
 # year_curr = 2023
-# year_range = 2008:2023
-# all_years = TRUE
+# all_years = FALSE
+# year_range = if(all_years == TRUE){2008:year_curr} else {year_curr}
+# spp_list = "DB"
 
 #---- Functions ----
 # Summarize results of QC check
@@ -75,12 +76,26 @@ tluspp <- if(spp_list == "FQAI"){
   read.csv("https://raw.githubusercontent.com/KateMMiller/wetlandHTLN/refs/heads/main/data/FQAI_species_list.csv")
 } else {tlu_WetlndSpeciesList}
 
-head(tluspp) # SCIENTIFIC_NAME for FQAI
+tbl_SamplingEvents$year <- format(as.Date(tbl_SamplingEvents$StartDate, format = "%m/%d/%Y", tz = "America/New_York"), "%Y")
+tbl_SamplingPeriods$year <- format(as.Date(tbl_SamplingPeriods$StartDate, format = "%m/%d/%Y", tz = "America/New_York"), "%Y")
+tbl_VIBI_Herb$year <- format(as.Date(substr(tbl_VIBI_Herb$EventID, 11, 19), format = "%Y%b%d", tz = "America/New_York"), "%Y")
+tbl_VIBI_Herb_Biomass$year <- format(as.Date(substr(tbl_VIBI_Herb_Biomass$EventID, 11, 19), format = "%Y%b%d", tz = "America/New_York"), "%Y")
+tbl_VIBI_Woody$year <- format(as.Date(substr(tbl_VIBI_Woody$EventID, 11, 19), format = "%Y%b%d", tz = "America/New_York"), "%Y")
+tbl_BigTrees$year <- format(as.Date(substr(tbl_BigTrees$EventID, 11, 19), format = "%Y%b%d", tz = "America/New_York"), "%Y")
+
+tbl_SamplingEvents <- tbl_SamplingEvents |> filter(year %in% year_range)
+tbl_SamplingPeriods <- tbl_SamplingPeriods |> filter(year %in% year_range)
+tbl_VIBI_Herb <- tbl_VIBI_Herb |> filter(year %in% year_range)
+tbl_VIBI_Herb_Biomass <- tbl_VIBI_Herb_Biomass |> filter(year %in% year_range)
+tbl_VIBI_Woody <- tbl_VIBI_Woody |> filter(year %in% year_range)
+tbl_BigTrees <- tbl_BigTrees |> filter(year %in% year_range)
+
+#head(tluspp) # SCIENTIFIC_NAME for FQAI
 
 #---- Individual View checking ----
 #----- Locations -----
 loc <- get("locations", env = HTLN_wetlands)
-locv <- loc |> filter(FeatureTypes %in% c("VIBIPlotID", "VIBIplotID"))
+locv <- loc |> filter(FeatureTypes %in% c("VIBIPlotID", "VIBIplotID")) #++++ ENDED HERE +++++ drop locations that weren't sampled in year range- get that from events
 
 # Check for LocationIDs that don't match convention of PARKWetlnd
 locid_typos <- loc |> filter(!substr(LocationID, 1, 10) %in% c("CUVAWetlnd", "TAPRWetlnd")) |> select(LocationID, FeatureTypes, FeatureID)
@@ -195,7 +210,7 @@ samp_comb$PeriodDate <- as.Date(sub("CUVAWetlnd", "", samp_comb$PeriodID), forma
 samp_comb$PeriodYear <- as.numeric(format(samp_comb$PeriodDate, format = "%Y"))
 samp_comb$SampleDate <- as.Date(samp_comb$StartDate_ev, format = "%m/%d/%Y")
 
-samp_comb2 <- samp_comb |> select(PeriodID, EventID, PeriodDate, PeriodYear, SampleDate)
+samp_comb2 <- samp_comb |> select(PeriodID, EventID, PeriodDate, PeriodYear, SampleDate) |> filter(PeriodYear %in% year_range)
 herbs <- left_join(tbl_VIBI_Herb, samp_comb2, by = "EventID")
 woody <- left_join(tbl_VIBI_Woody, samp_comb2, by = "EventID")
 bmass <- left_join(tbl_VIBI_Herb_Biomass, samp_comb2, by = "EventID")
@@ -222,7 +237,6 @@ sample_evs2 <- left_join(locv |> select(LocationID, FeatureID, X1oPlants), sampl
          Biomass = tbl_VIBI_Herb_Biomass, Woody = tbl_VIBI_Woody, BigTrees = tbl_BigTrees, Num_Samp_Mods) |>
   arrange(FeatureID, PeriodYear)
 
-head(sample_evs2)
 sample_evs3 <- sample_evs2 |> select(-PeriodDate)
 
 tbl_sample_evs <- kable(sample_evs3, format = 'html', align = 'c',

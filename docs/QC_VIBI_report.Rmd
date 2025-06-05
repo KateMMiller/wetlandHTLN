@@ -8,7 +8,7 @@ output:
 
 params:
   year_curr: 2023 # Current year of sampling
-  all_years: TRUE # If FALSE, only reports on year_curr; TRUE reports on all years
+  all_years: FALSE # If FALSE, only reports on year_curr; TRUE reports on all years
   spp_list: "DB" # If FQAI, matches species in database against OH EPA spp. list. If "DB", matches against tlu_WetlndSpeciesList. Once tlu_WetlndSpeciesList is cleaned up, switch this to "DB". 
   
 ---
