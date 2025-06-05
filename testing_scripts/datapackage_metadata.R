@@ -46,4 +46,6 @@ dates <- vibi_table_defs$column[grepl("Date", vibi_table_defs$column)]
 vibi_table_defs$class[vibi_table_defs$column %in% dates] <- "Date"
 vibi_table_defs$class[vibi_table_defs$class %in% c('integer', 'double')] <- "numeric"
 
+vibi_table_defs <- vibi_table_defs[,c("order", "view", "column", "class")]
+
 write.csv(vibi_table_defs, "./testing_scripts/VIBI_DP_table_defs.csv", row.names = F)
