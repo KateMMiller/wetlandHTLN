@@ -616,18 +616,18 @@ display:none;
 <h4>
 <b>Step 2.</b> Install devtools package in R:
 </h4>
-<pre class="r indent"><code>install.packages(&#39;devtools&#39;)</code></pre>
+<pre class="r"><code>install.packages(&#39;devtools&#39;)</code></pre>
 <h4>
 <b>Step 3.</b> Install wetlandHTLN from GitHub
 </h4>
 <p>Note that whenever the <code>wetlandHTLN</code> package is updated,
 you can rerun this code to install the latest version.</p>
-<pre class="r indent"><code>library(devtools)
+<pre class="r"><code>library(devtools)
 install_github(&quot;KateMMiller/wetlandHTLN&quot;)</code></pre>
 <h4>
 <b>Step 4.</b> Load wetlandHTLN R package
 </h4>
-<pre class="r indent"><code>library(wetlandHTLN)</code></pre>
+<pre class="r"><code>library(wetlandHTLN)</code></pre>
 <h4>
 <b>Step 5.</b> Import wetland monitoring data
 </h4>
@@ -657,7 +657,7 @@ HTLN_wetlands access database set as a User DSN called HTLN_wetlands
 <p>Currently, the <code>importData()</code> function only imports views
 related to the VIBI. Over time, options to compile/import views for ORAM
 and hydrology will be added.</p>
-<p class="indent">
+<p>
 <span style="color:#1942B5;"><b>Option 1.</b> Import data using default
 settings, which imports from DSN named
 <strong>HTLN_wetlands</strong>.</span>
@@ -666,7 +666,7 @@ settings, which imports from DSN named
 
 importData() 
 importData(type = &quot;DSN&quot;, odbc = &quot;HTLN_wetlands&quot;, data_type = &quot;vibi&quot;) # equivalent to previous line</code></pre>
-<p class="indent">
+<p>
 <span style="color:#1942B5;"><b>Option 2.</b> Import data from a
 specified database.</span>
 </p>
@@ -956,6 +956,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -1098,6 +1104,12 @@ CUVAWetlnd2008Sep17
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -1237,6 +1249,12 @@ CUVAWetlnd2008Sep17
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -1378,6 +1396,12 @@ CUVAWetlnd2008Sep17
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -1517,6 +1541,12 @@ CUVAWetlnd2008Sep17
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -1658,6 +1688,12 @@ CUVAWetlnd2008Sep17
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -1797,6 +1833,12 @@ CUVAWetlnd2008Sep17
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -1948,6 +1990,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -2090,6 +2138,12 @@ CUVAWetlnd2023Aug01
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2229,6 +2283,12 @@ CUVAWetlnd2023Aug01
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -2370,6 +2430,12 @@ CUVAWetlnd2023Aug01
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2509,6 +2575,12 @@ CUVAWetlnd2023Aug01
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -2650,6 +2722,12 @@ CUVAWetlnd2023Aug01
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -2789,6 +2867,12 @@ CUVAWetlnd2023Aug01
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -2940,6 +3024,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -3082,6 +3172,12 @@ CUVAWetlnd2020Aug03
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3221,6 +3317,12 @@ CUVAWetlnd2020Aug03
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -3362,6 +3464,12 @@ CUVAWetlnd2020Aug03
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3501,6 +3609,12 @@ CUVAWetlnd2020Aug03
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -3642,6 +3756,12 @@ CUVAWetlnd2020Aug04
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -3781,6 +3901,12 @@ CUVAWetlnd2020Aug04
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -3932,6 +4058,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -4074,6 +4206,12 @@ CUVAWetlnd2014Aug14
 <td style="text-align:left;">
 CUVAWetlnd2014Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -4213,6 +4351,12 @@ CUVAWetlnd2014Aug14
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2014Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -4354,6 +4498,12 @@ CUVAWetlnd2014Aug14
 <td style="text-align:left;">
 CUVAWetlnd2014Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -4493,6 +4643,12 @@ CUVAWetlnd2014Aug14
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2014Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -4634,6 +4790,12 @@ CUVAWetlnd2014Aug14
 <td style="text-align:left;">
 CUVAWetlnd2014Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -4773,6 +4935,12 @@ CUVAWetlnd2014Aug14
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2014Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -4924,6 +5092,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -5066,6 +5240,12 @@ CUVAWetlnd2008Sep17
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -5205,6 +5385,12 @@ CUVAWetlnd2008Sep17
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -5346,6 +5532,12 @@ CUVAWetlnd2008Sep17
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -5485,6 +5677,12 @@ CUVAWetlnd2008Sep17
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -5626,6 +5824,12 @@ CUVAWetlnd2008Sep17
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -5765,6 +5969,12 @@ CUVAWetlnd2008Sep17
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -5916,6 +6126,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -6058,6 +6274,12 @@ CUVAWetlnd2015Jul16
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -6197,6 +6419,12 @@ CUVAWetlnd2015Jul16
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -6338,6 +6566,12 @@ CUVAWetlnd2015Jul16
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -6477,6 +6711,12 @@ CUVAWetlnd2015Jul16
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -6618,6 +6858,12 @@ CUVAWetlnd2015Jun25
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -6757,6 +7003,12 @@ CUVAWetlnd2015Jun25
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -6908,6 +7160,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -7050,6 +7308,12 @@ CUVAWetlnd2008Sep17
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -7189,6 +7453,12 @@ CUVAWetlnd2008Sep17
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -7330,6 +7600,12 @@ CUVAWetlnd2008Sep17
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -7469,6 +7745,12 @@ CUVAWetlnd2008Sep17
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -7610,6 +7892,12 @@ CUVAWetlnd2008Sep17
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -7749,6 +8037,12 @@ CUVAWetlnd2008Sep17
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -7900,6 +8194,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -8042,6 +8342,12 @@ CUVAWetlnd2008Sep17
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -8181,6 +8487,12 @@ CUVAWetlnd2008Sep17
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -8322,6 +8634,12 @@ CUVAWetlnd2008Sep17
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -8461,6 +8779,12 @@ CUVAWetlnd2008Sep17
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -8602,6 +8926,12 @@ CUVAWetlnd2008Sep17
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -8741,6 +9071,12 @@ CUVAWetlnd2008Sep17
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -8894,6 +9230,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -9039,6 +9381,12 @@ CUVAWetlnd2019Sep23
 <td style="text-align:left;">
 CUVAWetlnd2019Jun15
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -9182,6 +9530,12 @@ CUVAWetlnd2019Sep26
 <td style="text-align:left;">
 CUVAWetlnd2019Jun15
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -9317,6 +9671,12 @@ NA
 NA
 </td>
 <td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
 NA
 </td>
 <td style="text-align:left;">
@@ -9468,6 +9828,12 @@ NA
 <td style="text-align:left;">
 NA
 </td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -9603,6 +9969,12 @@ NA
 NA
 </td>
 <td style="text-align:right;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
 NA
 </td>
 <td style="text-align:left;">
@@ -9754,6 +10126,12 @@ NA
 <td style="text-align:left;">
 NA
 </td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
 </tr>
 </tbody>
 </table>
@@ -9858,6 +10236,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -9949,6 +10333,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -10037,6 +10427,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -10127,6 +10523,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -10215,6 +10617,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -10305,6 +10713,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -10393,6 +10807,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -10495,6 +10915,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -10589,6 +11015,12 @@ CUVAWetlnd2023Aug05
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -10680,6 +11112,12 @@ CUVAWetlnd2023Aug05
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -10773,6 +11211,12 @@ CUVAWetlnd2023Aug05
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -10864,6 +11308,12 @@ CUVAWetlnd2023Aug05
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -10957,6 +11407,12 @@ CUVAWetlnd2023Aug05
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -11048,6 +11504,12 @@ CUVAWetlnd2023Aug05
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -11150,6 +11612,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -11244,6 +11712,12 @@ CUVAWetlnd2023Aug05
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -11335,6 +11809,12 @@ CUVAWetlnd2023Aug05
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -11428,6 +11908,12 @@ CUVAWetlnd2023Aug05
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -11519,6 +12005,12 @@ CUVAWetlnd2023Aug05
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -11612,6 +12104,12 @@ CUVAWetlnd2023Aug05
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -11703,6 +12201,12 @@ CUVAWetlnd2023Aug05
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -11805,6 +12309,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -11899,6 +12409,12 @@ CUVAWetlnd2009Aug12
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -11990,6 +12506,12 @@ CUVAWetlnd2009Aug12
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -12083,6 +12605,12 @@ CUVAWetlnd2009Aug12
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -12174,6 +12702,12 @@ CUVAWetlnd2009Aug12
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -12267,6 +12801,12 @@ CUVAWetlnd2009Aug12
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -12358,6 +12898,12 @@ CUVAWetlnd2009Aug12
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -12458,6 +13004,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -12549,6 +13101,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -12637,6 +13195,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -12727,6 +13291,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -12815,6 +13385,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -12905,6 +13481,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -12993,6 +13575,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -13095,6 +13683,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -13189,6 +13783,12 @@ CUVAWetlnd2014Oct27
 <td style="text-align:left;">
 CUVAWetlnd2014Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -13280,6 +13880,12 @@ CUVAWetlnd2014Oct27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2014Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -13373,6 +13979,12 @@ CUVAWetlnd2014Oct27
 <td style="text-align:left;">
 CUVAWetlnd2014Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -13464,6 +14076,12 @@ CUVAWetlnd2014Oct27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2014Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -13557,6 +14175,12 @@ CUVAWetlnd2015Jul06
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -13648,6 +14272,12 @@ CUVAWetlnd2015Jul06
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -13750,6 +14380,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -13844,6 +14480,12 @@ CUVAWetlnd2009Jul21
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -13935,6 +14577,12 @@ CUVAWetlnd2009Jul21
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -14028,6 +14676,12 @@ CUVAWetlnd2009Jul21
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -14119,6 +14773,12 @@ CUVAWetlnd2009Jul21
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -14212,6 +14872,12 @@ CUVAWetlnd2009Jul21
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -14303,6 +14969,12 @@ CUVAWetlnd2009Jul21
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -14403,6 +15075,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -14494,6 +15172,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -14582,6 +15266,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -14672,6 +15362,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -14760,6 +15456,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -14850,6 +15552,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -14938,6 +15646,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -15103,6 +15817,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -15254,6 +15974,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -15402,6 +16128,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -15552,6 +16284,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -15700,6 +16438,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -15850,6 +16594,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -15998,6 +16748,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -16158,6 +16914,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -16309,6 +17071,12 @@ CUVAWetlnd2023Aug03
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -16457,6 +17225,12 @@ CUVAWetlnd2023Aug03
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -16607,6 +17381,12 @@ CUVAWetlnd2023Aug03
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -16755,6 +17535,12 @@ CUVAWetlnd2023Aug03
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -16905,6 +17691,12 @@ CUVAWetlnd2023Aug03
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -17053,6 +17845,12 @@ CUVAWetlnd2023Aug03
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -17213,6 +18011,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -17364,6 +18168,12 @@ CUVAWetlnd2020Aug03
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -17512,6 +18322,12 @@ CUVAWetlnd2020Aug03
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -17662,6 +18478,12 @@ CUVAWetlnd2020Aug03
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -17811,6 +18633,12 @@ CUVAWetlnd2020Aug03
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -17959,6 +18787,12 @@ CUVAWetlnd2020Aug03
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -18108,6 +18942,12 @@ CUVAWetlnd2020Aug03
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -18268,6 +19108,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -18419,6 +19265,12 @@ CUVAWetlnd2009Aug12
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -18567,6 +19419,12 @@ CUVAWetlnd2009Aug12
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -18717,6 +19575,12 @@ CUVAWetlnd2009Aug12
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -18865,6 +19729,12 @@ CUVAWetlnd2009Aug12
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -19015,6 +19885,12 @@ CUVAWetlnd2009Aug12
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -19163,6 +20039,12 @@ CUVAWetlnd2009Aug12
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -19323,6 +20205,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -19474,6 +20362,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -19622,6 +20516,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -19772,6 +20672,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -19920,6 +20826,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -20070,6 +20982,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -20218,6 +21136,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -20378,6 +21302,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -20529,6 +21459,12 @@ CUVAWetlnd2015Aug05
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -20677,6 +21613,12 @@ CUVAWetlnd2015Aug05
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -20827,6 +21769,12 @@ CUVAWetlnd2015Aug05
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -20975,6 +21923,12 @@ CUVAWetlnd2015Aug05
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -21125,6 +22079,12 @@ CUVAWetlnd2015Aug05
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -21273,6 +22233,12 @@ CUVAWetlnd2015Aug05
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -21433,6 +22399,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -21584,6 +22556,12 @@ CUVAWetlnd2008Sep24
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -21732,6 +22710,12 @@ CUVAWetlnd2008Sep24
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -21882,6 +22866,12 @@ CUVAWetlnd2008Sep24
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -22030,6 +23020,12 @@ CUVAWetlnd2008Sep24
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -22180,6 +23176,12 @@ CUVAWetlnd2008Sep24
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -22328,6 +23330,12 @@ CUVAWetlnd2008Sep24
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -22488,6 +23496,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -22639,6 +23653,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -22787,6 +23807,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -22937,6 +23963,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -23085,6 +24117,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -23235,6 +24273,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -23383,6 +24427,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -23543,6 +24593,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -23694,6 +24750,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -23842,6 +24904,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -23992,6 +25060,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -24140,6 +25214,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -24290,6 +25370,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -24438,6 +25524,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -24606,6 +25698,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -24760,6 +25858,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -24911,6 +26015,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -25064,6 +26174,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -25215,6 +26331,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -25368,6 +26490,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -25519,6 +26647,12 @@ CUVAWetlnd2008Jul30
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -25682,6 +26816,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -25836,6 +26976,12 @@ CUVAWetlnd2023Aug05
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -25987,6 +27133,12 @@ CUVAWetlnd2023Aug05
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -26140,6 +27292,12 @@ CUVAWetlnd2023Aug05
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -26291,6 +27449,12 @@ CUVAWetlnd2023Aug05
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -26444,6 +27608,12 @@ CUVAWetlnd2023Aug05
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -26595,6 +27765,12 @@ CUVAWetlnd2023Aug05
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2023Jun01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -26758,6 +27934,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -26912,6 +28094,12 @@ CUVAWetlnd2020Aug03
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -27063,6 +28251,12 @@ CUVAWetlnd2020Aug03
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -27216,6 +28410,12 @@ CUVAWetlnd2020Aug03
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -27367,6 +28567,12 @@ CUVAWetlnd2020Aug03
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -27520,6 +28726,12 @@ CUVAWetlnd2020Aug03
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -27671,6 +28883,12 @@ CUVAWetlnd2020Aug03
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2020Jun15
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -27834,6 +29052,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -27988,6 +29212,12 @@ CUVAWetlnd2009Aug12
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -28139,6 +29369,12 @@ CUVAWetlnd2009Aug12
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -28292,6 +29528,12 @@ CUVAWetlnd2009Aug12
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -28443,6 +29685,12 @@ CUVAWetlnd2009Aug12
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -28596,6 +29844,12 @@ CUVAWetlnd2009Aug12
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -28747,6 +30001,12 @@ CUVAWetlnd2009Aug12
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2009Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -28910,6 +30170,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -29064,6 +30330,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -29215,6 +30487,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -29368,6 +30646,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -29519,6 +30803,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -29672,6 +30962,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -29823,6 +31119,12 @@ CUVAWetlnd2008Jul30
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -29986,6 +31288,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -30140,6 +31448,12 @@ CUVAWetlnd2015Aug05
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -30291,6 +31605,12 @@ CUVAWetlnd2015Aug05
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -30444,6 +31764,12 @@ CUVAWetlnd2015Aug05
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -30595,6 +31921,12 @@ CUVAWetlnd2015Jul06
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -30748,6 +32080,12 @@ CUVAWetlnd2015Jul06
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -30899,6 +32237,12 @@ CUVAWetlnd2015Jul06
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -31062,6 +32406,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -31216,6 +32566,12 @@ CUVAWetlnd2008Sep17
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -31368,6 +32724,12 @@ CUVAWetlnd2008Sep17
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -31519,6 +32881,12 @@ CUVAWetlnd2008Sep17
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -31672,6 +33040,12 @@ CUVAWetlnd2008Sep17
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -31824,6 +33198,12 @@ CUVAWetlnd2008Sep17
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -31975,6 +33355,12 @@ CUVAWetlnd2008Sep17
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -32138,6 +33524,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -32292,6 +33684,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -32443,6 +33841,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -32596,6 +34000,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -32747,6 +34157,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -32900,6 +34316,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -33051,6 +34473,12 @@ CUVAWetlnd2008Jul30
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>
@@ -33214,6 +34642,12 @@ EventID
 <th style="text-align:left;">
 PeriodID
 </th>
+<th style="text-align:left;">
+type
+</th>
+<th style="text-align:left;">
+basisOfRecord
+</th>
 </tr>
 </thead>
 <tbody>
@@ -33368,6 +34802,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -33519,6 +34959,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -33672,6 +35118,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -33823,6 +35275,12 @@ CUVAWetlnd2008Aug27
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 <tr>
@@ -33976,6 +35434,12 @@ CUVAWetlnd2008Aug27
 <td style="text-align:left;">
 CUVAWetlnd2008Mar01
 </td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
+</td>
 </tr>
 <tr>
 <td style="text-align:left;">
@@ -34127,6 +35591,12 @@ CUVAWetlnd2015Aug05
 </td>
 <td style="text-align:left;">
 CUVAWetlnd2015ESS01
+</td>
+<td style="text-align:left;">
+Event
+</td>
+<td style="text-align:left;">
+HumanObservation
 </td>
 </tr>
 </tbody>

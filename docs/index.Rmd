@@ -65,17 +65,17 @@ imgpath <- "C:/Users/KMMiller/OneDrive - DOI/NETN/R_Dev/wetlandHTLN/"
 #### Installation
 <h4><b>Step 1.</b> Install R, RStudio, and RTools44 in Software Center</h4>
 <h4><b>Step 2.</b> Install devtools package in R:</h4>
-```{r, eval = F, class.source = "indent"}
+```{r, eval = F}
 install.packages('devtools')
 ```
 <h4><b>Step 3.</b> Install wetlandHTLN from GitHub</h4>
 Note that whenever the `wetlandHTLN` package is updated, you can rerun this code to install the latest version.
-```{r, eval = F, class.source = "indent"}
+```{r, eval = F}
 library(devtools)
 install_github("KateMMiller/wetlandHTLN")
 ```
 <h4><b>Step 4.</b> Load wetlandHTLN R package</h4>
-```{r, class.source = "indent"}
+```{r}
 library(wetlandHTLN)
 ```
 <h4><b>Step 5.</b> Import wetland monitoring data</h4>
@@ -85,7 +85,7 @@ To keep your workspace clean (i.e. the top right panel with the Environment tab)
 
 Currently, the `importData()` function only imports views related to the VIBI. Over time, options to compile/import views for ORAM and hydrology will be added.  
 
-<p class = 'indent'>
+<p>
 <span style='color:#1942B5;'><b>Option 1.</b> Import data using default settings, which imports from DSN named **HTLN_wetlands**.</span></p>
 ```{r results = 'hide'}
 #install.packages(c('odbc', 'DBI')) # Only run if not already installed.
@@ -94,7 +94,7 @@ importData()
 importData(type = "DSN", odbc = "HTLN_wetlands", data_type = "vibi") # equivalent to previous line
 ```
 
-<p class = 'indent'>
+<p>
 <span style='color:#1942B5;'><b>Option 2.</b> Import data from a specified database.</span></p>
 ```{r, results = 'hide'}
 importData(type ='dbfile',
@@ -147,7 +147,7 @@ Sys.setenv(BINPREF = "C:\\PROGRA~1\\Rtools44\\mingw_$(WIN)\\bin\\")
 <h4><b>Getting (and improving) help</b></h4>
 The functions in `wetlandHTLN` have help documentation like any R package. To view the help, you can go to the Packages tab and click on wetlandHTLN (see below). That will show you all the functions in the package. Clicking on individual functions will take you to the help documentation for that function. 
 ```{r echo = F, out.height = '115px',  fig.align = 'center'}
-knitr::include_graphics(paste0(imgpath, "docs/www/finding_R_package.jpg"))
+knitr::include_graphics(paste0(imgpath, "./docs/www/finding_R_package.jpg"))
 ```
 
 <p class = 'fxn'>You can also see the help of a function by running, for example: </p>
@@ -175,7 +175,7 @@ Finally, if you ever want to peak under the hood at the function, you can view i
 <li>Go to Windows Start Menu and search ODBC. Click on ODBC Data Sources (64-bit) </li>
 
 ```{r echo = F, out.height = '457px', out.width = '564px', fig.align = 'center'}
-knitr::include_graphics(paste0(imgpath, "/docs/www/ODBC_step_1.jpg"))
+knitr::include_graphics(paste0(imgpath, "./docs/www/ODBC_step_1.jpg"))
 ```
 <li>Click on <i>Add</i>, then select <i>Microsoft Access Driver (\*.mdb, \*.accdb)</i> then click <i>Finish</i> in next menu.</li>
 
