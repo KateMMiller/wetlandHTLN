@@ -75,7 +75,7 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
   type <- match.arg(type, c("DSN", "dbfile", "csv", "zip"))
   stopifnot(class(new_env) == 'logical')
   data_type <- match.arg(data_type, c("vibi")) #+++ Add oram and all when they're enabled ++++
-  stopifnot(is.logical(export_path))
+  stopifnot(is.logical(export))
 
   # check that filepath was specified for non-DSN options
   if(type %in% c("dbfile", "csv", "zip")){
@@ -204,7 +204,8 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
   # Fill in missing DomVeg_Lev1 using X1ofPlants
   #table(loc$X1oPlants, loc$DomVeg_Lev1)
   veg_tbl <- data.frame(X1oPlants = c("PEM", "PFO", "PSS"), DomVeg_Lev1 = c("emergent", "forest", "shrub"))
-  loc <- left_join(loc4, veg_tbl, by = c("X1oPlants"))
+  loc5 <- left_join(loc4, veg_tbl, by = c("X1oPlants"))
+  loc <- loc5 |> filter(FeatureTypes %in% "VIBIplotID")
 
   samp_pds <- get("SamplingPeriods", envir = env)
   samp_evs <- get("SamplingEvents", envir = env)
