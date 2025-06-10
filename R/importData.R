@@ -239,7 +239,7 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
 
   # Column names to order by/include for each view
   loc_cols <- c("LocationID", "FeatureID", "Park", "County", "PeriodDate", "PeriodYear",
-                "SampleDate", "SampleYear", #"Latitude", "Longitude",
+                "SampleDate", "SampleYear", "Latitude", "Longitude",
                 "TotalMods", "InternMods", "PlotConfig",
                 "AreaHA", "X1oPlants", "X1oHGM", "X2oVegID", "DomVegID", "HGM_ID", "HGMClass",
                 "Mod_Desc", "DomVeg_Lev1", "DomVeg_Lev2", "DomVeg_Lev3", "SurveyType")
