@@ -205,7 +205,16 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
   #table(loc$X1oPlants, loc$DomVeg_Lev1)
   veg_tbl <- data.frame(X1oPlants = c("PEM", "PFO", "PSS"), DomVeg_Lev1 = c("emergent", "forest", "shrub"))
   loc5 <- left_join(loc4, veg_tbl, by = c("X1oPlants"))
-  loc <- loc5 |> filter(FeatureTypes %in% "VIBIplotID")
+  loc6 <- loc5 |> filter(FeatureTypes %in% "VIBIplotID")
+
+  keep_cols <- c("WetlandName", "LocationID", "FeatureTypes", "FeatureID", "Park",
+                 "County", "TotalMods", "InternMods", "PlotConfig", "AreaHA",
+                 "X1oPlants", "Centerline", "X1oHGM", "Directions", "Latitude",
+                 "Longitude", "SampleType", "AccessPermission", "WetlandSize",
+                 "EstablishmentDate", "DomVegID", "HGM_ID", "SurveyType", "Mod_Desc",
+                 "DomVeg_Lev2", "DomVeg_Lev3", "DomVeg_Lev1_orig", "DomVeg_Lev1")
+
+  loc <- loc6[, keep_cols]
 
   samp_pds <- get("SamplingPeriods", envir = env)
   samp_evs <- get("SamplingEvents", envir = env)
@@ -238,10 +247,10 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
   names(btrees)[names(btrees) == "ModNo"] <- "ModuleNo"
 
   # Column names to order by/include for each view
-  loc_cols <- c("LocationID", "FeatureID", "Park", "County", "PeriodDate", "PeriodYear",
+  loc_cols <- c("LocationID", "FeatureID", "Park", "County", "PeriodYear",
                 "SampleDate", "SampleYear", "Latitude", "Longitude",
                 "TotalMods", "InternMods", "PlotConfig",
-                "AreaHA", "X1oPlants", "X1oHGM", "X2oVegID", "DomVegID", "HGM_ID", "HGMClass",
+                "AreaHA", "X1oPlants", "X1oHGM", "DomVegID", "HGM_ID",
                 "Mod_Desc", "DomVeg_Lev1", "DomVeg_Lev2", "DomVeg_Lev3", "SurveyType")
 
   spp_cols <- c("ScientificName", "COMMON_NAME", "AUTHORITY", "FAMILY", "ACRONYM", "COFC",
@@ -269,7 +278,7 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
 
   herb5 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], herb4, by = c("EventID"))
 
-  herb_final <- herb5[,c(loc_cols, spp_cols, "ModuleNo", "CovCode", "MidPoint", "VoucherNo", "Comments_Herb", "EventID", "PeriodID")] |>
+  herb_final <- herb5[,c(loc_cols, spp_cols, "ModuleNo", "CovCode", "MidPoint", "EventID", "PeriodID")] |>
     mini_darwin_core()
 
   # Woody
