@@ -263,8 +263,8 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
     dplyr::filter(!is.na(EventID))
 
   bmass2 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], bmass1, by = c("EventID"))
-
-  bmass_final <- bmass2[,c(loc_cols, "VIBI_Herb_Biomass_ID", "ModuleNo", "Corner", "DryWt", "EventID", "PeriodID")] |>
+  bmass3 <- bmass2[!is.na(bmass2$LocationID),]
+  bmass_final <- bmass3[,c(loc_cols, "VIBI_Herb_Biomass_ID", "ModuleNo", "Corner", "DryWt", "EventID", "PeriodID")] |>
     mini_darwin_core()
 
   # Herbs
@@ -277,8 +277,8 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
   herb4$COFC <- as.numeric(herb4$COFC)
 
   herb5 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], herb4, by = c("EventID"))
-
-  herb_final <- herb5[,c(loc_cols, spp_cols, "ModuleNo", "CovCode", "MidPoint", "EventID", "PeriodID")] |>
+  herb6 <- herb5[!is.na(herb5$LocationID),]
+  herb_final <- herb6[,c(loc_cols, spp_cols, "ModuleNo", "CovCode", "MidPoint", "EventID", "PeriodID")] |>
     mini_darwin_core()
 
   # Woody
@@ -293,8 +293,8 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
   names(woody3)[names(woody3) == "FeatureID_Loc"] <- "FeatureID"
 
   woody4 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], woody3, by = c("EventID"))
-
-  woody_final <- woody4[,c(loc_cols, spp_cols, "ModuleNo", "DiamID", "SortOrder", "DiamVal", "DBH_MidPt", "Count", "EventID", "PeriodID")] |>
+  woody5 <- woody4[!is.na(woody4$LocationID),]
+  woody_final <- woody5[,c(loc_cols, spp_cols, "ModuleNo", "DiamID", "SortOrder", "DiamVal", "DBH_MidPt", "Count", "EventID", "PeriodID")] |>
     mini_darwin_core()
 
   # BigTrees
@@ -305,8 +305,8 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
     filter(!is.na(EventID)) # dropping records with no bigtree data
 
   btrees3 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], btrees2, by = c("EventID"))
-
-  btrees_final <- btrees3[,c(loc_cols, spp_cols, "ModuleNo", "DBH", "EventID", "PeriodID")] |>
+  btrees4 <- btrees3[!is.na(btrees3$LocationID),]
+  btrees_final <- btrees4[,c(loc_cols, spp_cols, "ModuleNo", "DBH", "EventID", "PeriodID")] |>
     mini_darwin_core()
 
   # remove all but final tables from HTLN_wetlands env.
