@@ -91,7 +91,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   # Compile the loc/visit table to left-join with final results
   plots_abbr <- plots[,c("LocationID", "FeatureTypes", "FeatureID", "Park", "County", "TotalMods", "InternMods",
                          "PlotConfig", "AreaHA",
-                         "X1oPlants", "X2oVegID", "X1oHGM", "DomVegID", "HGM_ID", "HGMClass",
+                         "X1oPlants", "X1oHGM", "DomVegID", "HGM_ID",
                          "DomVeg_Lev1", "DomVeg_Lev2", "DomVeg_Lev3")]
 
   #---- Compile Herb Metrics ----
@@ -164,7 +164,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
                             "SampleYear", "DomVeg_Lev1")) |>
     filter(!is.na(MidPoint)) |>  # dropping FeatureID 1007 from 2023 for Mod NA with blank Species and cover.
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, DomVeg_Lev2,
-             genus, FAMILY, OH_STATUS, TYPE, SHADE, FORM, WET, WETreg, COFC, HABIT,
+             genus, FAMILY, OH_STATUS, LIFEFORM, SHADE, FORM, WET, WETreg, COFC, HABIT,
              ScientificName) |>
     summarize(spp_cov = sum(MidPoint),
               rel_cov = spp_cov/first(tot_cov),
@@ -244,9 +244,9 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   # dicot Community E SH
   dicot1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1,
-           OH_STATUS, TYPE, ScientificName) |>
+           OH_STATUS, LIFEFORM, ScientificName) |>
     #filter(DomVeg_Lev1 %in% c("emergent", "shrub")) |>
-    filter(OH_STATUS == "native" & TYPE == "DI") |> unique() |> # native dicots
+    filter(OH_STATUS == "native" & LIFEFORM == "DI") |> unique() |> # native dicots
     group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1) |>
     summarize(Num_Dicot = sum(!is.na(ScientificName)), .groups = 'drop') |>
     mutate(Dicot_Score = case_when(is.na(Num_Dicot) ~ NA_real_,
@@ -665,7 +665,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
 
   bigt1 <- getBigTrees(years = years, survey_type = survey_type, hgm_class = hgm_class,
                        dom_veg1 = dom_veg1, plotID = plotID, nativity = 'all', intens_mod = 4) |>
-    mutate(BIG_ba_cm2 = pi*(DBH/2)^2)
+    mutate(BIG_ba_cm2 = pi*(DBH_cm/2)^2)
 
   # Set wet status based on the column chosen, like in the macros code
   bigt1$WETreg <- ifelse(is.na(bigt1[,region]), bigt1$WET, bigt1[,region])
@@ -677,7 +677,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
                             SHADE, FORM, WET, WETreg,
                             ScientificName) |>
     summarize(BIG_BA = sum(BIG_ba_cm2, na.rm = T),
-              BIG_Count = sum(!is.na(DBH)),
+              BIG_Count = sum(!is.na(DBH_cm)),
               DiamID = "BIG",
               DiamVal = ">= 40",
               .groups = 'drop')
@@ -891,9 +891,9 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
 
   bmass <- bmass1 |>
            filter(DomVeg_Lev1 == "emergent") |>
-           mutate(weight_g_m2 = DryWt/0.1) |>
+           mutate(weight_g_m2 = DryWt_g/0.1) |>
            group_by(LocationID, FeatureID, EventID, SampleDate, SampleYear, TotalMods, AreaHA, DomVeg_Lev1) |>
-           summarize(num_bmass_samp = sum(!is.na(DryWt)),
+           summarize(num_bmass_samp = sum(!is.na(DryWt_g)),
                      Avg_Bmass = sum(weight_g_m2)/num_bmass_samp,
                      .groups = 'drop') |>
            mutate(Biomass_Score = case_when(is.na(Avg_Bmass) ~ NA_real_,
@@ -1094,7 +1094,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
  site_cols <- c("LocationID", "FeatureTypes", "FeatureID", "Park", "County", "TotalMods", "InternMods",
                 "PlotConfig", "AreaHA", "SampleYear", "SampleDate", "EventID",
                 "DomVeg_Lev1", "DomVeg_Lev2", "DomVeg_Lev3",
-                 "X1oPlants", "X2oVegID", "X1oHGM", "HGMClass")
+                 "X1oPlants", "X1oHGM")
 
  comb_dat1 <- comb_dat[,c(site_cols, vibi_cols, info_cols)]
 

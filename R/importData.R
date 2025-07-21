@@ -191,6 +191,7 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
 
   tluSpp <- get("tlu_WetlndSpeciesList", envir = env) |> unique()
   names(tluSpp)[names(tluSpp) == "SCIENTIFIC_NAME"] <- "ScientificName"
+  names(tluSpp)[names(tluSpp) == "TYPE"] <- "LIFEFORM"
 
   tluCover <- get("tlu_CoverClass", envir = env)
 
@@ -229,6 +230,7 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
   bmass$SampleDate = as.Date(sub("CUVAWetlnd", "", bmass$EventID), format = "%Y%b%d")
   bmass$SampleYear = as.numeric(format(bmass$SampleDate, format = "%Y"))
   names(bmass)[names(bmass) == "Module"] <- "ModuleNo"
+  names(bmass)[names(bmass) == "DryWt"] <- "DryWt_g"
 
   herb1 <- get("VIBI_Herb", envir = env)
   herb1$SampleDate = as.Date(sub("CUVAWetlnd", "", herb1$EventID), format = "%Y%b%d")
@@ -245,6 +247,7 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
   btrees$SampleDate = as.Date(sub("CUVAWetlnd", "", btrees$EventID), format = "%Y%b%d")
   btrees$SampleYear = as.numeric(format(btrees$SampleDate, format = "%Y"))
   names(btrees)[names(btrees) == "ModNo"] <- "ModuleNo"
+  names(btrees)[names(btrees) == "DBH"] <- "DBH_cm"
 
   # Column names to order by/include for each view
   loc_cols <- c("LocationID", "FeatureID", "Park", "County", "PeriodYear",
@@ -255,7 +258,8 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
 
   spp_cols <- c("ScientificName", "COMMON_NAME", "AUTHORITY", "FAMILY", "ACRONYM", "COFC",
                 "FN", "WET", "FORM", "HABIT", "SHADE", "USDA_ID",
-                "OH_TORE", "TYPE", "OH_STATUS", "EMP", "MW", "NCNE", "NOTES")
+                "OH_TORE", "LIFEFORM",
+                "OH_STATUS", "EMP", "MW", "NCNE", "NOTES")
 
   # Biomass
   bmass1 <- dplyr::left_join(loc, bmass, by = "LocationID", suffix = c("_Loc", "_bmass")) |>
@@ -264,7 +268,7 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
 
   bmass2 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], bmass1, by = c("EventID"))
   bmass3 <- bmass2[!is.na(bmass2$LocationID),]
-  bmass_final <- bmass3[,c(loc_cols, "VIBI_Herb_Biomass_ID", "ModuleNo", "Corner", "DryWt", "EventID", "PeriodID")] |>
+  bmass_final <- bmass3[,c(loc_cols, "VIBI_Herb_Biomass_ID", "ModuleNo", "Corner", "DryWt_g", "EventID", "PeriodID")] |>
     mini_darwin_core()
 
   # Herbs
@@ -306,7 +310,7 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
 
   btrees3 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], btrees2, by = c("EventID"))
   btrees4 <- btrees3[!is.na(btrees3$LocationID),]
-  btrees_final <- btrees4[,c(loc_cols, spp_cols, "ModuleNo", "DBH", "EventID", "PeriodID")] |>
+  btrees_final <- btrees4[,c(loc_cols, spp_cols, "ModuleNo", "DBH_cm", "EventID", "PeriodID")] |>
     mini_darwin_core()
 
   # remove all but final tables from HTLN_wetlands env.

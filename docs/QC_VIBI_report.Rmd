@@ -136,11 +136,11 @@ check_null_print(tbl_non_evs, 4, "Unmatched EventIDs")
 
 check_null_print(tbl_bmass_locid, 4, "LocationID issues")
 
-check_null_print(tbl_bmass_neg, 4, "Negative DryWt")
+check_null_print(tbl_bmass_neg, 4, "Negative DryWt_g")
 
-check_null_print(tbl_bmass_dups, 4, "Duplicate DryWt")
+check_null_print(tbl_bmass_dups, 4, "Duplicate DryWt_g")
 
-check_null_print(tbl_wt_99, 4, "DryWt 99pct")
+check_null_print(tbl_wt_99, 4, "DryWt_g 99pct")
 
 ```
 

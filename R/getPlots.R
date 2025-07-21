@@ -76,6 +76,12 @@ getPlots <- function(plot_type = "VIBIplotID", survey_type = 'all', hgm_class = 
   plot2 <- if(any(survey_type == 'all')){plot1
   } else {plot1[plot1$SurveyType %in% survey_type,]}
 
+  plot2$HGMClass <- NA_character_
+  plot2$HGMClass[plot2$HGM_ID %in% c("IA", "IB")] <- "Depression"
+  plot2$HGMClass[plot2$HGM_ID %in% c("IIA", "IIB")] <- "Impoundment"
+  plot2$HGMClass[plot2$HGM_ID %in% c("IIIA", "IIIB", "IIIC")] <- "Riverine"
+  plot2$HGMClass[plot2$HGM_ID %in% c("IVA", "IVB", "IVC")] <- "Slope"
+
   plot3 <- if(any(hgm_class == 'all')){plot2
   } else {plot2[plot2$HGMClass %in% hgm_class,]}
 

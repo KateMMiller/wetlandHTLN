@@ -84,7 +84,7 @@ sumVIBI <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%Y")),
   sum_vibi <- vibi |>
     group_by(LocationID, FeatureTypes, FeatureID, Park, County, TotalMods,
              PlotConfig, AreaHA, SampleYear, SampleDate, EventID,
-             DomVeg_Lev1, DomVeg_Lev2, DomVeg_Lev3, X1oPlants, X2oVegID, X1oHGM, HGMClass) |>
+             DomVeg_Lev1, DomVeg_Lev2, DomVeg_Lev3, X1oPlants, X1oHGM) |>
     summarize(Num_Carex = mean(Num_Carex, na.rm = T),
               Num_Cyper = mean(Num_Cyper, na.rm = T),
               Num_Dicot = mean(Num_Dicot, na.rm = T),
