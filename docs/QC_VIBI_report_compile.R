@@ -414,7 +414,7 @@ herb_check <- QC_table |> filter(Data %in% "VIBI Herbs" & Num_Records > 0)
 herb_include <- tab_include(herb_check)
 
 #----- Biomass -----
-# Find blanks in DryWt
+# Find blanks in DryWt_g
 bmass_blanks <- tbl_VIBI_Herb_Biomass_curr |> filter(is.na(DryWt))
 
 QC_table <- rbind(QC_table,
@@ -815,7 +815,6 @@ tbl_bigt_once <- make_kable(bigt_once, "Species that have only been recorded onc
 # check if Big Tree checks returned at least 1 record to determine whether to include that tab in report
 bigt_check <- QC_table |> filter(Data %in% "Big Trees" & Num_Records > 0)
 bigt_include <- tab_include(bigt_check)
-
 
 #----- Species list -----
 # check that OH_STATUS == "adventive" and SHADE = "advent" match
