@@ -317,12 +317,12 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
 
   rm(list = ls(envir = env), envir = env)
 
-  assign("locations", loc, envir = env)
-  assign("biomassVIBI", bmass_final, envir = env)
-  assign("herbVIBI", herb_final, envir = env)
-  assign("woodyVIBI", woody_final, envir = env)
-  assign("bigtreesVIBI", btrees_final, envir = env)
-  assign("tluSpp", tluSpp, envir = env)
+  assign("HTLN_Wetlands_locations", loc, envir = env)
+  assign("HTLN_Wetlands_biomassVIBI", bmass_final, envir = env)
+  assign("HTLN_Wetlands_herbVIBI", herb_final, envir = env)
+  assign("HTLN_Wetlands_woodyVIBI", woody_final, envir = env)
+  assign("HTLN_Wetlands_bigtreesVIBI", btrees_final, envir = env)
+  assign("HTLN_Wetlands_tluSpp", tluSpp, envir = env)
 
   # Print message in console
   print(ifelse(new_env == TRUE,
