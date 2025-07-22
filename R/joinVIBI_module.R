@@ -112,7 +112,7 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
                    ))
   }
 
-  tryCatch(tluSpp <- get("tluSpp", envir = env),
+  tryCatch(tluSpecies <- get("tluSpecies", envir = env),
            error = function(e){stop("tlu_WetlndSpeciesList not found. Please run importData() first.")})
 
   # Compile the loc/visit table to left-join with final results
@@ -213,8 +213,8 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
       wet_rel_cov_reg = rel_cov * wet_wt_reg) |>
     data.frame()
 
-  # Create list of wet indicators from tluSpp
-  wet <- unique(tluSpp$WET[grepl("OBL|FACW", tluSpp$WET)])
+  # Create list of wet indicators from tluSpecies
+  wet <- unique(tluSpecies$WET[grepl("OBL|FACW", tluSpecies$WET)])
 
   # Create table to left_join with herb vibi metrics; There are no sample qualifiers for sampled, but non present
   # So assuming if there's a record in this df below, and the community matches, the VIBI should be 0 for herb vibis
@@ -224,8 +224,8 @@ joinVIBI_module <- function(years = 2008:as.numeric(format(Sys.Date(), format = 
   #   summarize(sum_rel = sum(rel_cov))
   # table(herbs_check$sum_rel, useNA = 'always') # all sum to 1
 
-  # Create list of wet indicators from tluSpp
-  wet <- unique(tluSpp$WET[grepl("OBL|FACW", tluSpp$WET)])
+  # Create list of wet indicators from tluSpecies
+  wet <- unique(tluSpecies$WET[grepl("OBL|FACW", tluSpecies$WET)])
 
   # Using macros cases to determine the exact ranges of VIBI scores (ie whether <= or < vs >= or >)
   # Carex Community E, SH

@@ -189,9 +189,9 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
   tluHGM <- get("tlu_HGMClass", envir = env)
   tluWoody <- get("tlu_WoodyPlants", envir = env)
 
-  tluSpp <- get("tlu_WetlndSpeciesList", envir = env) |> unique()
-  names(tluSpp)[names(tluSpp) == "SCIENTIFIC_NAME"] <- "ScientificName"
-  names(tluSpp)[names(tluSpp) == "TYPE"] <- "LIFEFORM"
+  tluSpecies <- get("tlu_WetlndSpeciesList", envir = env) |> unique()
+  names(tluSpecies)[names(tluSpecies) == "SCIENTIFIC_NAME"] <- "ScientificName"
+  names(tluSpecies)[names(tluSpecies) == "TYPE"] <- "LIFEFORM"
 
   tluCover <- get("tlu_CoverClass", envir = env)
 
@@ -276,7 +276,7 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
     dplyr::filter(FeatureTypes %in% c("VIBIplotID")) |>
     dplyr::filter(!is.na(EventID))
 
-  herb4 <- dplyr::left_join(herb3, tluSpp, by = c("Species" = "ScientificName"))
+  herb4 <- dplyr::left_join(herb3, tluSpecies, by = c("Species" = "ScientificName"))
   names(herb4)[names(herb4) == "Species"] <- "ScientificName"
   herb4$COFC <- as.numeric(herb4$COFC)
 
@@ -289,7 +289,7 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
   woody1 <- dplyr::left_join(loc, woody, by = c("LocationID"), suffix = c("_Loc", "_Woody")) |>
     dplyr::filter(FeatureTypes %in% c("VIBIplotID")) |>
     dplyr::filter(!is.na(EventID))
-  woody2 <- dplyr::left_join(woody1, tluSpp, by = c("Scientific_Name" = "ScientificName"))
+  woody2 <- dplyr::left_join(woody1, tluSpecies, by = c("Scientific_Name" = "ScientificName"))
   woody3 <- dplyr::left_join(woody2, tluWoody, by = "DiamID")
 
   # rename cols so consistent with herb view
@@ -305,7 +305,7 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
   btrees1 <- dplyr::left_join(loc, btrees, by = c("LocationID"), suffix = c("_Loc", "_BT")) |>
     dplyr::filter(FeatureTypes == "VIBIplotID")
   names(btrees1)[names(btrees1) == "Scientific_Name"] <- "ScientificName"
-  btrees2 <- dplyr::left_join(btrees1, tluSpp, by = "ScientificName") |>
+  btrees2 <- dplyr::left_join(btrees1, tluSpecies, by = "ScientificName") |>
     filter(!is.na(EventID)) # dropping records with no bigtree data
 
   btrees3 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], btrees2, by = c("EventID"))
@@ -322,7 +322,7 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
   assign("herbVIBI", herb_final, envir = env)
   assign("woodyVIBI", woody_final, envir = env)
   assign("bigtreesVIBI", btrees_final, envir = env)
-  assign("tluSpp", tluSpp, envir = env)
+  assign("tluSpecies", tluSpecies, envir = env)
 
   # Print message in console
   print(ifelse(new_env == TRUE,
@@ -333,11 +333,12 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
   if(export == TRUE){
     dir.create(tmp <- tempfile())
     dbtbls <- names(HTLN_wetlands)
+    dbtbls_name <- paste0("HTLN_wetlands_", dbtbls)
 
     invisible(lapply(seq_along(dbtbls), function(x){
       temp_tbl = get(dbtbls[x], envir = env)
       write.csv(temp_tbl,
-                paste0(tmp, "\\", dbtbls[x], ".csv"),
+                paste0(tmp, "\\", dbtbls_name[x], ".csv"),
                 row.names = FALSE)
     }))
 
