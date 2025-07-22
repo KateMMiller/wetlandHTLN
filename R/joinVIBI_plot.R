@@ -85,7 +85,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
   plots <- getPlots(plot_type = "VIBIplotID", survey_type = survey_type, hgm_class = hgm_class,
                     dom_veg1 = dom_veg1, plotID = plotID, intens_mods = 4)
 
-  tryCatch(tluSpp <- get("tluSpp", envir = env),
+  tryCatch(tluSpecies <- get("tluSpecies", envir = env),
            error = function(e){stop("tlu_WetlndSpeciesList not found. Please run importData() first.")})
 
   # Compile the loc/visit table to left-join with final results
@@ -188,8 +188,8 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
       wet_rel_cov_reg = rel_cov * wet_wt_reg) |>
     data.frame()
 
-  # Create list of wet indicators from tluSpp
-  wet <- unique(tluSpp$WET[grepl("OBL|FACW", tluSpp$WET)])
+  # Create list of wet indicators from tluSpecies
+  wet <- unique(tluSpecies$WET[grepl("OBL|FACW", tluSpecies$WET)])
 
   # Create table to left_join with herb vibi metrics; There are no sample qualifiers for sampled, but non present
   # So assuming if there's a record in this df below, and the community matches, the VIBI should be 0 for herb vibis
@@ -498,7 +498,7 @@ joinVIBI_plot <- function(years = 2008:as.numeric(format(Sys.Date(), format = "%
 
   # % Hydrophyte using rel_cov: OH_STATUS = native, SHADE = shade or partial, WET/WETreg = FACW (FACW) OBL
   # *if total cover(sum of cover values for all species observed in sample plot is <10%, all % metrics scored as 0)
-  #wet <- unique(tluSpp$WET[grepl("OBL|FACW", tluSpp$WET)]) # not using this anymore, as wet_wt is used instead, where UPL = 0
+  #wet <- unique(tluSpecies$WET[grepl("OBL|FACW", tluSpecies$WET)]) # not using this anymore, as wet_wt is used instead, where UPL = 0
 
   pct_hydro_reg1 <- herbs |>
     select(LocationID, FeatureID, EventID, SampleDate, SampleYear, DomVeg_Lev1, ScientificName,
