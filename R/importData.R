@@ -298,7 +298,7 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
 
   woody4 <- full_join(samp_comb[,c("PeriodID", "EventID", "PeriodDate", "PeriodYear")], woody3, by = c("EventID"))
   woody5 <- woody4[!is.na(woody4$LocationID),]
-  woody_final <- woody5[,c(loc_cols, spp_cols, "ModuleNo", "DiamID", "SortOrder", "DiamVal", "DBH_MidPt", "Count", "EventID", "PeriodID")] |>
+  woody_final <- woody5[,c(loc_cols, spp_cols, "ModuleNo", "DiamID", "SortOrder", "DiamVal", "DBH_MidPt_percent", "Count", "EventID", "PeriodID")] |>
     mini_darwin_core()
 
   # BigTrees
