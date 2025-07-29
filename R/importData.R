@@ -66,6 +66,10 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
   mini_darwin_core <- function(df) {
     df$type <- "Event"
     df$basisOfRecord <- "HumanObservation"
+    
+    if ("AreaHA" %in% colnames(df)) {
+      colnames(df)[colnames(df) == "AreaHA"] <- "Area_ha"
+    }
 
     df
   }
