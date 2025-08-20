@@ -349,7 +349,7 @@ importData <- function(type = 'DSN', odbc = "HTLN_wetlands", filepath = NA, new_
               root = tmp,
               files = file_list)
     # csvs will be deleted as soon as R session is closed b/c tempfile
-    noquote(paste0('Export complete. Wetland VIBI views saved to: ', export_pathn, zip_name))
+    noquote(paste0('Export complete. Wetland VIBI views saved to: ', export_pathn, "\\", zip_name))
 
   }
   }
