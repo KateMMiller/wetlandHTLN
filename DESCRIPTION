@@ -17,7 +17,7 @@ Imports:
 Suggests: 
     DBI,
     odbc
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Collate: 
     'getBigTrees.R'
     'getBiomass.R'
@@ -28,3 +28,4 @@ Collate:
     'joinVIBI_module.R'
     'joinVIBI_plot.R'
     'sumVIBI.R'
+    'zzz.R'

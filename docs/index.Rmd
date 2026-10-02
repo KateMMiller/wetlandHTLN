@@ -61,6 +61,8 @@ imgpath <- "C:/Users/KMMiller/OneDrive - DOI/NETN/R_Dev/wetlandHTLN/"
 
 ## Using the wetlandHTLN R package {.tabset .tabset-pills}
 
+<h3 style='color:red;'>This website has been moved to <a href="https://doi-nps.github.io/wetlandHTLN">https://doi-nps.github.io/wetlandHTLN</a> and will no longer be updated on this site. The code repo for this site is <a href="https://github.com/DOI-NPS/wetlandHTLN">https://github.com/DOI-NPS/wetlandHTLN</a>.</h3>
+
 ### Getting started {.tabset}
 
 #### Installation
