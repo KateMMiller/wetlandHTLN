@@ -365,7 +365,7 @@ tbl_herb_locid <- make_kable(herb_locid, "tbl_VIBI_Herb.LocationIDs that don't h
 # Check for duplicate species within a given module
 herb_dups <- tbl_VIBI_Herb_curr |> group_by(LocationID, EventID, ModNo, Species) |>
   summarize(num_records = sum(!is.na(CovCode)), .groups = "drop") |>
-  filter(num_records != 1)
+  filter(num_records > 1)
 
 if(nrow(herb_dups) > 0){
   assign("duplicate_herb_spp", herb_dups, envir = .GlobalEnv)
